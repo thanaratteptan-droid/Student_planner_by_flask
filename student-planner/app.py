@@ -49,6 +49,39 @@ def add_task():
     
     return render_template('add_task.html')
 
+# --- ส่วนของ แก้ไข ลบ และเปลี่ยนสถานะงาน ---
+
+@app.route('/edit_task/<int:id>', methods=['GET', 'POST'])
+def edit_task(id):
+    # ค้นหางานจาก ID ในฐานข้อมูล
+    task = Task.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        # รับข้อมูลที่แก้ไขจากฟอร์ม
+        task.title = request.form['title']
+        task.description = request.form['description']
+        task.due_date = request.form['due_date']
+        task.status = request.form['status']
+        
+        db.session.commit() # บันทึกการแก้ไขลงฐานข้อมูล
+        return redirect(url_for('dashboard'))
+        
+    return render_template('edit_task.html', task=task) # ส่งข้อมูลเดิมไปแสดงในฟอร์ม
+
+@app.route('/delete_task/<int:id>')
+def delete_task(id):
+    task = Task.query.get_or_404(id)
+    db.session.delete(task)
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
+@app.route('/complete_task/<int:id>')
+def complete_task(id):
+    task = Task.query.get_or_404(id)
+    task.status = 'Done'
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
     # สร้างไฟล์ฐานข้อมูลอัตโนมัติก่อนรันแอป
     with app.app_context():
