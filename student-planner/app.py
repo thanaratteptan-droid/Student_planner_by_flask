@@ -82,6 +82,13 @@ def complete_task(id):
     db.session.commit()
     return redirect(url_for('dashboard'))
 
+# --- หน้าประวัติงานที่ทำเสร็จแล้ว ---
+@app.route('/history')
+def history():
+    # ดึงเฉพาะงานที่มีสถานะ 'Done'
+    tasks = Task.query.filter_by(status='Done').all()
+    return render_template('history.html', tasks=tasks)
+
 if __name__ == '__main__':
     # สร้างไฟล์ฐานข้อมูลอัตโนมัติก่อนรันแอป
     with app.app_context():
