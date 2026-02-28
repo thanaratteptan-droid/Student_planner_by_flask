@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">🗓️ ปฏิทินกำหนดส่งงาน</h2>
+    <a href="/add_task" class="btn btn-primary shadow-sm rounded-pill px-4">+ เพิ่มงานใหม่</a>
+</div>
+
+<div class="card shadow-sm border-0 mb-5" style="border-radius: 1.25rem; overflow: hidden;">
+    <div class="card-body p-4 bg-body">
+        
+        <div class="d-flex flex-wrap gap-3 mb-4 justify-content-center text-muted" style="font-size: 0.85rem;">
+            <span><span class="badge" style="background-color: #e74c3c;">&nbsp;&nbsp;</span> ด่วนมาก</span>
+            <span><span class="badge" style="background-color: #f39c12;">&nbsp;&nbsp;</span> ปานกลาง</span>
+            <span><span class="badge" style="background-color: #3788d8;">&nbsp;&nbsp;</span> ชิลๆ</span>
+            <span><span class="badge" style="background-color: #1abc9c;">&nbsp;&nbsp;</span> เสร็จแล้ว</span>
+        </div>
+
+        <div id='calendar'></div>
+        
+    </div>
+</div>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        
+        // รับข้อมูล events จาก Python (Jinja2 แปลงเป็น JSON ให้เลย โคตรล้ำ!)
+        var calendarEvents = {{ events | tojson | safe }};
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'th', // ใช้ภาษาไทย
+            height: 'auto',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            buttonText: {
+                today: 'วันนี้',
+                month: 'เดือน',
+                week: 'สัปดาห์',
+                list: 'รายการ'
+            },
+            events: calendarEvents,
+            eventClick: function(info) {
+                info.jsEvent.preventDefault(); // ป้องกันการเด้งเปลี่ยนหน้าแบบกระตุก
+                if (info.event.url) {
+                    window.location.href = info.event.url; // พาไปหน้าแก้ไขงาน
+                }
+            }
+        });
+        
+        calendar.render();
+    });
+</script>
+
+<style>
+    /* 📌 ปรับให้ปฏิทินรองรับ Dark Mode */
+    [data-bs-theme="dark"] .fc-theme-standard td, 
+    [data-bs-theme="dark"] .fc-theme-standard th,
+    [data-bs-theme="dark"] .fc-theme-standard .fc-scrollgrid {
+        border-color: var(--bs-border-color);
+    }
+    [data-bs-theme="dark"] .fc-col-header-cell-cushion,
+    [data-bs-theme="dark"] .fc-daygrid-day-number,
+    [data-bs-theme="dark"] .fc-list-day-text,
+    [data-bs-theme="dark"] .fc-list-day-side-text {
+        color: var(--bs-body-color);
+    }
+    [data-bs-theme="dark"] .fc-toolbar-title {
+        color: var(--bs-body-color);
+    }
+    /* แต่งปุ่มปฏิทินให้ดูโมเดิร์นขึ้น */
+    .fc .fc-button-primary {
+        background-color: var(--sp-primary);
+        border-color: var(--sp-primary);
+        border-radius: 0.5rem;
+        text-transform: capitalize;
+    }
+    .fc .fc-button-primary:not(:disabled):active, 
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #3751a0;
+        border-color: #3751a0;
+    }
+</style>
+{% endblock %}

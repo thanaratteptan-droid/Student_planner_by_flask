@@ -152,6 +152,36 @@ def history():
     tasks = Task.query.filter_by(user_id=user.id, status='Done').all()
     return render_template('history.html', tasks=tasks)
 
+# --- ระบบปฏิทิน (Interactive Calendar) ---
+@app.route('/calendar')
+def calendar():
+    user = get_current_user()
+    if not user: return redirect(url_for('login'))
+
+    tasks = Task.query.filter_by(user_id=user.id).all()
+    
+    # แปลงข้อมูลงานให้เป็นรูปแบบที่ FullCalendar JS อ่านเข้าใจ
+    events = []
+    for t in tasks:
+        if t.due_date: # ดึงเฉพาะงานที่มีกำหนดส่ง
+            # กำหนดสีของงานบนปฏิทิน ตามสถานะและความสำคัญ
+            color = '#3788d8' # สีน้ำเงิน (ค่าเริ่มต้น)
+            if t.status == 'Done':
+                color = '#1abc9c' # สีเขียว (เสร็จแล้ว)
+            elif 'ด่วนมาก' in t.priority:
+                color = '#e74c3c' # สีแดง
+            elif 'ปานกลาง' in t.priority:
+                color = '#f39c12' # สีส้ม
+
+            events.append({
+                'title': t.title,
+                'start': t.due_date,
+                'color': color,
+                'url': f'/edit_task/{t.id}' # กดที่งานแล้วให้เด้งไปหน้าแก้ไข
+            })
+
+    return render_template('calendar.html', events=events)
+
 # --- ระบบตารางเรียนอัจฉริยะ (แยกตามโปรไฟล์) ---
 @app.route('/schedule')
 def schedule():
