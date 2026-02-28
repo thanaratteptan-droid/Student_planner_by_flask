@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+# เปลี่ยนบรรทัด import แรกให้เป็นแบบนี้
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
+# เพิ่ม Secret Key ตรงนี้ (ใส่คำว่าอะไรก็ได้)
+app.config['SECRET_KEY'] = 'secretkey1234'
 
 # ตั้งค่า Database SQLite
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -18,6 +21,19 @@ class Task(db.Model):
     description = db.Column(db.String(200))
     due_date = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Pending') # สถานะ: Pending หรือ Done
+
+# สร้างตารางเก็บข้อมูลตารางเรียน (Subject)
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    day = db.Column(db.String(20))
+    time = db.Column(db.String(50))
+
+# --- สร้างตารางเก็บข้อมูลผู้ใช้งาน (User) ---
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
 
 # Route หน้าแรก (Landing Page)
 @app.route('/')
@@ -88,6 +104,63 @@ def history():
     # ดึงเฉพาะงานที่มีสถานะ 'Done'
     tasks = Task.query.filter_by(status='Done').all()
     return render_template('history.html', tasks=tasks)
+
+# --- ส่วนของตารางเรียน ---
+@app.route('/schedule')
+def schedule():
+    subjects = Subject.query.all()
+    return render_template('schedule.html', subjects=subjects)
+
+@app.route('/add_class', methods=['GET', 'POST'])
+def add_class():
+    if request.method == 'POST':
+        new_subject = Subject(
+            name=request.form['name'],
+            day=request.form['day'],
+            time=request.form['time']
+        )
+        db.session.add(new_subject)
+        db.session.commit()
+        return redirect(url_for('schedule'))
+        
+    return render_template('add_class.html')
+
+# --- ระบบสมาชิก (Auth) ---
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        new_user = User(
+            username=request.form['username'],
+            password=request.form['password'] # ของจริงควรเข้ารหัสพาสเวิร์ด แต่นี่เป็นงานส่งอาจารย์แบบด่วน เอาแบบนี้ไปก่อนครับ
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # ค้นหา User ในฐานข้อมูล
+        user = User.query.filter_by(username=request.form['username'], password=request.form['password']).first()
+        if user:
+            session['username'] = user.username # จำชื่อผู้ใช้ลงใน session
+            return redirect(url_for('profile'))
+        else:
+            return "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! <a href='/login'>ลองใหม่</a>"
+            
+    return render_template('login.html')
+
+@app.route('/profile')
+def profile():
+    if 'username' not in session:
+        return redirect(url_for('login')) # ถ้ายังไม่ล็อกอิน ให้เด้งไปหน้า login
+    return render_template('profile.html', username=session['username'])
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None) # ลบข้อมูลออกจาก session
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     # สร้างไฟล์ฐานข้อมูลอัตโนมัติก่อนรันแอป
