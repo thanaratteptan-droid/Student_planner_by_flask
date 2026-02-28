@@ -57,5 +57,6 @@
 1. **Clone Repository:**
    ```bash
    git clone https://github.com/thanaratteptan-droid/Student_planner_by_flask
-   cd student-planner
+   cd Student_planner_by_flask/student-planner
    python -m streamlit run app.py
+
