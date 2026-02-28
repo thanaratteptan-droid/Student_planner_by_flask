@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📅 ตารางเรียนของฉัน</h2>
+    <a href="/add_class" class="btn btn-primary">+ เพิ่มวิชาเรียน</a>
+</div>
+
+<div class="card shadow-sm border-info">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-info">
+                <tr>
+                    <th>วัน</th>
+                    <th>เวลาเรียน</th>
+                    <th>ชื่อวิชา</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in subjects %}
+                <tr>
+                    <td><strong>{{ subject.day }}</strong></td>
+                    <td>{{ subject.time }}</td>
+                    <td>{{ subject.name }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary">รอทำปุ่มลบ</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">ยังไม่มีตารางเรียนเลย ไปเพิ่มวิชากันเถอะ!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
