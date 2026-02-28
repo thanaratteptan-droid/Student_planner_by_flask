@@ -79,8 +79,7 @@
                     <td>
                         <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
                         <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
-                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" onclick="return confirm('ลบงานนี้แน่ใจนะ?');">🗑️ ลบ</a>
-                    </td>
+                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                        </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -112,8 +111,7 @@
                     <td>
                         <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
                         <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
-                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" onclick="return confirm('ลบงานนี้แน่ใจนะ?');">🗑️ ลบ</a>
-                    </td>
+                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                    </td>
                 </tr>
                 {% else %}
                 <tr><td colspan="4" class="text-center py-4 text-muted">ไม่มีงานที่ค้างอยู่</td></tr>
@@ -145,8 +143,7 @@
                     <td class="text-muted">{{ task.due_date }}</td>
                     <td>
                         <span class="badge bg-success">เสร็จสิ้น</span>
-                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-outline-danger ms-2" onclick="return confirm('ลบประวัติงานนี้?');">ลบ</a>
-                    </td>
+                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                    </td>
                 </tr>
                 {% else %}
                 <tr><td colspan="4" class="text-center py-4 text-muted">ยังไม่มีงานที่ทำเสร็จเลย สู้ๆ !</td></tr>
@@ -155,4 +152,71 @@
         </table>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+    // 1. ฟังก์ชันสำหรับ Popup ยืนยันการลบงาน
+    function confirmDelete(event, deleteUrl) {
+        event.preventDefault(); // หยุดการเปลี่ยนหน้าเว็บทันที
+        
+        Swal.fire({
+            title: 'แน่ใจหรือไม่?',
+            text: "หากลบแล้วจะไม่สามารถกู้คืนได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '🗑️ ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก',
+            backdrop: `rgba(0,0,123,0.4)` 
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // ถ้ายืนยัน ให้พาไปหน้าลบข้อมูล
+                window.location.href = deleteUrl;
+            }
+        });
+    }
+
+    // 2. ฟังก์ชันจุดพลุฉลอง เมื่อทำงานเสร็จ 100% (Canvas Confetti)
+    {% if percent == 100 and total_tasks > 0 %}
+        // หน่วงเวลาให้หน้าเว็บโหลดเสร็จก่อนค่อยจุดพลุ (500 มิลลิวินาที)
+        setTimeout(() => {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              var particleCount = 50 * (timeLeft / duration);
+              confetti(Object.assign({}, defaults, { particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+              }));
+              confetti(Object.assign({}, defaults, { particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+              }));
+            }, 250);
+            
+            // เด้ง Popup ชมเชย
+            Swal.fire({
+                title: '🎉 ยอดเยี่ยมมาก!',
+                text: 'คุณเคลียร์งานทั้งหมดเรียบร้อยแล้ว !',
+                icon: 'success',
+                confirmButtonText: 'สุดยอดไปเลย',
+                confirmButtonColor: '#198754'
+            });
+        }, 500);
+    {% endif %}
+</script>
+
 {% endblock %}
