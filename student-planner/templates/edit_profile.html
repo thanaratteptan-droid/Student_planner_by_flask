@@ -8,15 +8,23 @@
                 <h4 class="mb-0">✏️ แก้ไขโปรไฟล์</h4>
             </div>
             <div class="card-body">
-                <form action="/edit_profile" method="POST">
+                <form action="/edit_profile" method="POST" enctype="multipart/form-data">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">รูปโปรไฟล์ (Profile Picture)</label>
+                        <input type="file" class="form-control" name="profile_pic" accept="image/*">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">ชื่อผู้ใช้ (Username)</label>
                         <input type="text" class="form-control" name="username" value="{{ user.username }}" required>
                     </div>
+                    
                     <div class="mb-4">
                         <label class="form-label">รหัสผ่านใหม่</label>
                         <input type="password" class="form-control" name="password" placeholder="ปล่อยว่างไว้ถ้าไม่ต้องการเปลี่ยนรหัสผ่าน">
                     </div>
+                    
                     <button type="submit" class="btn btn-warning w-100">บันทึกการเปลี่ยนแปลง</button>
                     <a href="/profile" class="btn btn-secondary w-100 mt-2">ยกเลิก</a>
                 </form>
