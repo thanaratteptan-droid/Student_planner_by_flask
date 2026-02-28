@@ -2,8 +2,8 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>📊 ภาพรวมงานทั้งหมด</h2>
-    <a href="/add_task" class="btn btn-primary">+ เพิ่มงานใหม่</a>
+    <h2 class="fw-bold mb-0">📊 ภาพรวมงานทั้งหมด</h2>
+    <a href="/add_task" class="btn btn-primary shadow-sm rounded-pill px-4">+ เพิ่มงานใหม่</a>
 </div>
 
 {% set total_tasks = pending_tasks|length + overdue_tasks|length + done_tasks|length %}
@@ -20,21 +20,45 @@
     }
     .hover-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 25px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
     }
     .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--sp-primary) 0%, #764ba2 100%);
+    }
+    
+    /* 📌 แก้ไขตารางให้รองรับ Dark Mode 100% */
+    .modern-table {
+        background-color: transparent !important;
+    }
+    .modern-table th {
+        font-weight: 600;
+        color: var(--bs-secondary-color);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--bs-border-color) !important;
+        background-color: var(--bs-secondary-bg) !important; /* ปรับสีหัวตารางตามธีม */
+    }
+    .modern-table td {
+        vertical-align: middle;
+        background-color: var(--bs-body-bg) !important; /* ปรับสีพื้นหลังแถวตามธีม */
+        color: var(--bs-body-color) !important;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+    
+    /* 📌 ปรับกรอบการ์ดในโหมดมืด */
+    [data-bs-theme="dark"] .card {
+        border: 1px solid var(--bs-border-color) !important;
     }
 </style>
 
-<div class="card hover-card border-0 gradient-bg text-white mb-4 shadow" style="border-radius: 15px;">
+<div class="card hover-card border-0 gradient-bg text-white mb-5 shadow-sm" style="border-radius: 1.25rem;">
     <div class="card-body p-4 d-flex align-items-center">
         <div class="me-4 d-none d-md-block">
-            <h1 style="font-size: 4rem; margin: 0; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));">🏆</h1>
+            <h1 style="font-size: 4rem; margin: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">🏆</h1>
         </div>
         <div class="flex-grow-1">
             <h4 class="fw-bold mb-1">ภาพรวมความสำเร็จของคุณ</h4>
-            
             {% if total_tasks == 0 %}
                 <p class="mb-3 text-light opacity-75">คุณยังไม่มีงานในระบบเลย มากดเพิ่มงานใหม่กันเถอะ!</p>
             {% elif percent == 100 %}
@@ -43,11 +67,9 @@
                 <p class="mb-3 text-light opacity-75">คุณทำภารกิจเสร็จไปแล้ว {{ done_count }} จาก {{ total_tasks }} งาน</p>
             {% endif %}
 
-            <div class="progress shadow-sm" style="height: 22px; border-radius: 11px; background-color: rgba(255,255,255,0.2);">
+            <div class="progress shadow-sm" style="height: 20px; border-radius: 10px; background-color: rgba(255,255,255,0.2);">
                 <div class="progress-bar progress-bar-striped progress-bar-animated {% if percent == 100 %}bg-warning text-dark{% else %}bg-success{% endif %} fw-bold" 
-                     role="progressbar" 
-                     style="width: {{ percent }}%; font-size: 0.9rem;" 
-                     aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                     role="progressbar" style="width: {{ percent }}%; font-size: 0.85rem;">
                     {{ percent }}%
                 </div>
             </div>
@@ -56,100 +78,100 @@
 </div>
 
 {% if overdue_tasks %}
-<div class="card shadow-sm border-danger mb-4">
-    <div class="card-header bg-danger text-white">
-        <h5 class="mb-0">🚨 งานที่เกินกำหนดแล้ว!</h5>
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-danger-subtle text-danger border-0 py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> 🚨 งานที่เกินกำหนดแล้ว!</h5>
     </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-danger">
-                <tr>
-                    <th>ชื่องาน</th>
-                    <th>รายละเอียด</th>
-                    <th>กำหนดส่ง</th>
-                    <th>จัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task in overdue_tasks %}
-                <tr>
-                    <td class="text-danger fw-bold">{{ task.title }}</td>
-                    <td>{{ task.description }}</td>
-                    <td class="text-danger fw-bold">{{ task.due_date }}</td>
-                    <td>
-                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
-                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
-                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                        </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ชื่องาน</th><th>รายละเอียด</th><th>กำหนดส่ง</th><th class="text-end pe-4">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in overdue_tasks %}
+                    <tr>
+                        <td class="text-danger fw-bold ps-4">{{ task.title }}</td>
+                        <td class="text-muted">{{ task.description }}</td>
+                        <td class="text-danger fw-bold"><span class="badge bg-danger rounded-pill">{{ task.due_date }}</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="เสร็จแล้ว">✅</a>
+                            <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="แก้ไข">✏️</a>
+                            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')" title="ลบ">🗑️</a>                        
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endif %}
 
-<div class="card shadow-sm border-warning mb-4">
-    <div class="card-header bg-warning text-dark">
-        <h5 class="mb-0">⏳ งานที่กำลังทำ (Pending)</h5>
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-warning-subtle text-warning-emphasis border-0 py-3">
+        <h5 class="mb-0 fw-bold">⏳ งานที่กำลังทำ (Pending)</h5>
     </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-warning">
-                <tr>
-                    <th>ชื่องาน</th>
-                    <th>รายละเอียด</th>
-                    <th>กำหนดส่ง</th>
-                    <th>จัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task in pending_tasks %}
-                <tr>
-                    <td class="fw-bold">{{ task.title }}</td>
-                    <td>{{ task.description }}</td>
-                    <td>{{ task.due_date }}</td>
-                    <td>
-                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
-                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
-                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="text-center py-4 text-muted">ไม่มีงานที่ค้างอยู่</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ชื่องาน</th><th>รายละเอียด</th><th>กำหนดส่ง</th><th class="text-end pe-4">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in pending_tasks %}
+                    <tr>
+                        <td class="fw-bold text-body ps-4">{{ task.title }}</td>
+                        <td class="text-muted">{{ task.description }}</td>
+                        <td><span class="badge bg-secondary rounded-pill">{{ task.due_date }}</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="เสร็จแล้ว">✅</a>
+                            <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="แก้ไข">✏️</a>
+                            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')" title="ลบ">🗑️</a>                    
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center py-5 text-muted">🎉 ไม่มีงานที่ค้างอยู่เลย ไปพักผ่อนได้!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="card shadow-sm border-success mb-4">
-    <div class="card-header bg-success text-white">
-        <h5 class="mb-0">✅ งานที่ทำเสร็จแล้ว (Done)</h5>
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-success-subtle text-success border-0 py-3">
+        <h5 class="mb-0 fw-bold">✅ งานที่ทำเสร็จแล้ว (Done)</h5>
     </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-success">
-                <tr>
-                    <th>ชื่องาน</th>
-                    <th>รายละเอียด</th>
-                    <th>กำหนดส่ง</th>
-                    <th>สถานะ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for task in done_tasks %}
-                <tr>
-                    <td class="text-decoration-line-through text-muted">{{ task.title }}</td>
-                    <td class="text-muted">{{ task.description }}</td>
-                    <td class="text-muted">{{ task.due_date }}</td>
-                    <td>
-                        <span class="badge bg-success">เสร็จสิ้น</span>
-                        <a href="#" class="btn btn-sm btn-danger" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️ ลบ</a>                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="text-center py-4 text-muted">ยังไม่มีงานที่ทำเสร็จเลย สู้ๆ !</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover modern-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ชื่องาน</th><th>รายละเอียด</th><th>กำหนดส่ง</th><th class="text-end pe-4">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in done_tasks %}
+                    <tr>
+                        <td class="text-decoration-line-through text-muted ps-4">{{ task.title }}</td>
+                        <td class="text-muted">{{ task.description }}</td>
+                        <td class="text-muted">{{ task.due_date }}</td>
+                        <td class="text-end pe-4">
+                            <span class="badge bg-success rounded-pill me-2">เสร็จสิ้น</span>
+                            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')">🗑️</a>                    
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center py-5 text-muted">ยังไม่มีงานที่ทำเสร็จเลย สู้ๆ นะ! ✌️</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -157,66 +179,44 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-    // 1. ฟังก์ชันสำหรับ Popup ยืนยันการลบงาน
     function confirmDelete(event, deleteUrl) {
-        event.preventDefault(); // หยุดการเปลี่ยนหน้าเว็บทันที
-        
+        event.preventDefault(); 
         Swal.fire({
             title: 'แน่ใจหรือไม่?',
             text: "หากลบแล้วจะไม่สามารถกู้คืนได้!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
+            confirmButtonColor: '#e74c3c',
             cancelButtonColor: '#6c757d',
             confirmButtonText: '🗑️ ใช่, ลบเลย!',
             cancelButtonText: 'ยกเลิก',
-            backdrop: `rgba(0,0,123,0.4)` 
+            backdrop: `rgba(0,0,0,0.4)`,
+            borderRadius: '1rem'
         }).then((result) => {
             if (result.isConfirmed) {
-                // ถ้ายืนยัน ให้พาไปหน้าลบข้อมูล
                 window.location.href = deleteUrl;
             }
         });
     }
 
-    // 2. ฟังก์ชันจุดพลุฉลอง เมื่อทำงานเสร็จ 100% (Canvas Confetti)
     {% if percent == 100 and total_tasks > 0 %}
-        // หน่วงเวลาให้หน้าเว็บโหลดเสร็จก่อนค่อยจุดพลุ (500 มิลลิวินาที)
         setTimeout(() => {
             var duration = 3 * 1000;
             var animationEnd = Date.now() + duration;
             var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
-            function randomInRange(min, max) {
-              return Math.random() * (max - min) + min;
-            }
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
 
             var interval = setInterval(function() {
               var timeLeft = animationEnd - Date.now();
-
-              if (timeLeft <= 0) {
-                return clearInterval(interval);
-              }
-
+              if (timeLeft <= 0) { return clearInterval(interval); }
               var particleCount = 50 * (timeLeft / duration);
-              confetti(Object.assign({}, defaults, { particleCount,
-                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-              }));
-              confetti(Object.assign({}, defaults, { particleCount,
-                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-              }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
             }, 250);
             
-            // เด้ง Popup ชมเชย
-            Swal.fire({
-                title: '🎉 ยอดเยี่ยมมาก!',
-                text: 'คุณเคลียร์งานทั้งหมดเรียบร้อยแล้ว !',
-                icon: 'success',
-                confirmButtonText: 'สุดยอดไปเลย',
-                confirmButtonColor: '#198754'
-            });
+            Swal.fire({ title: '🎉 ยอดเยี่ยมมาก!', text: 'คุณเคลียร์งานทั้งหมดเรียบร้อยแล้ว !', icon: 'success', confirmButtonText: 'สุดยอดไปเลย', confirmButtonColor: '#1abc9c' });
         }, 500);
     {% endif %}
 </script>
-
 {% endblock %}
