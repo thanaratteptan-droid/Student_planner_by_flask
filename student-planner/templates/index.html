@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center border shadow-sm">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold text-primary">Student Planner</h1>
+        <p class="col-md-8 mx-auto fs-4 mt-3">
+            จัดการตารางเรียน โปรเจกต์ และงานที่ต้องส่งได้อย่างง่ายดาย ไม่พลาดทุกกำหนดการสำคัญ!
+        </p>
+        <div class="mt-4">
+            <a href="/dashboard" class="btn btn-primary btn-lg px-4 me-2">ไปที่หน้า Dashboard</a>
+            <a href="/add_task" class="btn btn-outline-secondary btn-lg px-4">เพิ่มงานใหม่</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
