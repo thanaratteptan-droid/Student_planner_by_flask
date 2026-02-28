@@ -1,33 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>📅 ตารางเรียนของฉัน</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">📅 ตารางเรียนของฉัน</h2>
     <div>
-        <button class="btn btn-success me-2" onclick="downloadSchedule()">📸 เซฟเป็นรูป</button>
-        <a href="/add_class" class="btn btn-primary">+ เพิ่มวิชาเรียน</a>
+        <button class="btn btn-success shadow-sm rounded-pill px-3 me-2" onclick="downloadSchedule()">📸 เซฟเป็นรูป</button>
+        <a href="/add_class" class="btn btn-primary shadow-sm rounded-pill px-3">+ เพิ่มวิชาเรียน</a>
     </div>
 </div>
 
 <style>
-    /* CSS Custom สำหรับตารางเรียน */
+    /* CSS Custom สำหรับตารางเรียน (รองรับ Modern UI & Dark Mode) */
+    .timetable-card {
+        background: var(--bs-body-bg);
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 1.5rem;
+        border: 1px solid var(--bs-border-color);
+        margin-bottom: 3rem;
+    }
     .timetable-wrapper {
         overflow-x: auto;
-        background: #fff;
-        border: 1px solid #eaecf0;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        padding: 10px;
+        border-radius: 0.5rem;
     }
     .timetable {
         display: grid;
         grid-template-columns: 100px repeat(60, minmax(15px, 1fr));
         gap: 1px;
-        background-color: #eaecf0;
+        background-color: var(--bs-border-color); /* สีเส้นตาราง */
         min-width: 1000px;
+        border-radius: 0.5rem;
+        overflow: hidden;
     }
     .timetable > div {
-        background-color: #fff;
+        background-color: var(--bs-body-bg); /* สีช่องว่าง */
     }
     .time-header {
         display: flex;
@@ -35,126 +41,249 @@
         justify-content: center;
         font-size: 0.8rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--bs-secondary-color);
+        background-color: var(--bs-secondary-bg) !important;
+        padding: 10px 0;
     }
     .day-label {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         font-weight: bold;
-        color: #475569;
-        background-color: #fff; 
+        color: var(--bs-body-color);
+        background-color: var(--bs-body-bg); 
     }
+    
+    /* สไตล์บล็อกวิชาเรียน */
     .class-block {
-        opacity: 1;
         margin: 3px;
-        border-radius: 6px;
+        border-radius: 0.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
         padding: 10px 5px;
-        color: #334155;
+        
+        /* บังคับตัวอักษรสีเข้มเสมอเพราะพื้นหลังมักเป็นสีพาสเทล */
+        color: #212529 !important; 
+        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
         position: relative;
         word-break: break-word; 
         overflow: hidden;
         line-height: 1.3;
         z-index: 1;
-        transition: all 0.2s ease-in-out;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .class-block:hover {
+        z-index: 10;
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     }
     .class-block strong {
-        font-size: 0.75rem; /* ปรับฟอนต์ชื่อวิชาให้เล็กลงนิดหน่อยเพื่อให้จุคำได้มากขึ้น */
+        font-size: 0.8rem;
         margin-bottom: 2px;
+        font-weight: 700;
     }
     .class-time {
-        font-size: 0.65rem;
-        opacity: 0.8;
+        font-size: 0.7rem;
+        opacity: 0.85;
+        font-weight: 500;
     }
     .class-room {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: bold;
-        color: #475569;
-        margin-top: 2px;
+        background: rgba(255,255,255,0.5);
+        padding: 1px 6px;
+        border-radius: 10px;
+        margin-top: 4px;
     }
+    
+    /* ปุ่มลบสุดโมเดิร์น */
     .delete-btn {
         position: absolute;
-        top: 2px;
-        right: 2px;
-        font-size: 0.65rem;
-        color: #dc3545;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        font-size: 0.7rem;
+        color: #fff;
+        background-color: #dc3545;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-decoration: none;
-        display: none;
-        background: rgba(255,255,255,0.9);
-        padding: 2px 4px;
-        border-radius: 4px;
-        border: 1px solid #f5c2c7;
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(220,53,69,0.4);
     }
     .class-block:hover .delete-btn {
-        display: block; /* โชว์ปุ่มลบเฉพาะตอนเอาเมาส์ไปชี้ จะได้ไม่บังตัวหนังสือ */
+        opacity: 1;
+        transform: scale(1);
+    }
+    .delete-btn:hover {
+        background-color: #c82333;
+        color: #fff;
+    }
+    /* 📌 ปุ่มคัดลอกสุดเนียน (ฝั่งซ้าย) */
+    .copy-btn {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 22px;
+        height: 22px;
+        font-size: 0.7rem;
+        background-color: #3b82f6; /* สีฟ้า */
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(59,130,246,0.4);
+    }
+    .class-block:hover .copy-btn {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .copy-btn:hover {
+        background-color: #2563eb;
+        color: white;
     }
 </style>
 
-<div class="timetable-wrapper mb-5">
-    <div class="timetable" style="grid-template-rows: 50px repeat({{ total_rows }}, minmax(90px, auto));">
-        
-        <div class="time-header" style="grid-row: 1; grid-column: 1;">Day/Time</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 2 / span 6;">08:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 8 / span 6;">09:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 14 / span 6;">10:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 20 / span 6;">11:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 26 / span 6;">12:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 32 / span 6;">01:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 38 / span 6;">02:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 44 / span 6;">03:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 50 / span 6;">04:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 56 / span 6;">05:00 PM</div>
+<div class="timetable-card">
+    <div class="timetable-wrapper" id="capture-area">
+        <div class="timetable" style="grid-template-rows: 50px repeat({{ total_rows }}, minmax(90px, auto));">
+            
+            <div class="time-header" style="grid-row: 1; grid-column: 1;">Day/Time</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 2 / span 6;">08:00 AM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 8 / span 6;">09:00 AM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 14 / span 6;">10:00 AM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 20 / span 6;">11:00 AM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 26 / span 6;">12:00 PM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 32 / span 6;">01:00 PM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 38 / span 6;">02:00 PM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 44 / span 6;">03:00 PM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 50 / span 6;">04:00 PM</div>
+            <div class="time-header" style="grid-row: 1; grid-column: 56 / span 6;">05:00 PM</div>
 
-        {% for day in day_labels %}
-        <div class="day-label" style="grid-row: {{ day.start_row }} / span {{ day.span }}; grid-column: 1;">
-            {{ day.name_en }}
-        </div>
-        {% endfor %}
+            {% for day in day_labels %}
+            <div class="day-label" style="grid-row: {{ day.start_row }} / span {{ day.span }}; grid-column: 1;">
+                {{ day.name_en }}
+            </div>
+            {% endfor %}
 
-        {% for item in schedule_data %}
-        <div class="class-block" 
-             style="background-color: {{ item.bg_color }}; grid-row: {{ item.row }}; grid-column: {{ item.start_col }} / {{ item.end_col }};">
-            <a href="/delete_class/{{ item.id }}" class="delete-btn" onclick="return confirm('ลบวิชานี้?');">ลบ</a>
-            <strong>{{ item.name }}</strong>
-            <div class="class-time">{{ item.time }}</div>
-            {% if item.room %}
-            <div class="class-room">{{ item.room }}</div>
-            {% endif %}
+            {% for item in schedule_data %}
+            <div class="class-block" 
+                 style="background-color: {{ item.bg_color }}; grid-row: {{ item.row }}; grid-column: {{ item.start_col }} / {{ item.end_col }};">
+                
+                <a href="#" class="copy-btn" data-name="{{ item.name }}" data-room="{{ item.room if item.room else '' }}" onclick="copyClassToForm(event, this)" title="คัดลอกไปสร้างใหม่">📋</a>
+                
+                <a href="#" class="delete-btn" onclick="confirmDeleteClass(event, '/delete_class/{{ item.id }}')" title="ลบวิชานี้">🗑️</a>
+                <strong>{{ item.name }}</strong>
+                <div class="class-time">{{ item.time }}</div>
+                {% if item.room %}
+                <div class="class-room">{{ item.room }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+    // 1. ฟังก์ชันโหลดรูปภาพ (แก้ไขให้รองรับ Dark Mode ดีขึ้น)
     function downloadSchedule() {
-        // หาตัวกล่องตารางเรียนที่จะแคปเจอร์
-        const scheduleNode = document.querySelector(".timetable-wrapper");
+        const scheduleNode = document.getElementById("capture-area");
         
-        scheduleNode.style.borderRadius = "0px"; 
-        scheduleNode.style.boxShadow = "none";
+        // เช็คว่าตอนนี้เป็นโหมดมืดหรือสว่าง เพื่อให้สีพื้นหลังรูปภาพออกมาถูกต้อง
+        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const bgColor = isDarkMode ? '#212529' : '#ffffff';
+        
+        // โชว์ Loading สวยๆ ระหว่างที่แคปเจอร์
+        Swal.fire({
+            title: '📸 กำลังสร้างรูปภาพ...',
+            text: 'กรุณารอสักครู่...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
         
         html2canvas(scheduleNode, {
-            scale: 2, // เพิ่มความคมชัดของรูปเป็น 2 เท่า
-            backgroundColor: document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#212529' : '#ffffff'
+            scale: 2, 
+            backgroundColor: bgColor
         }).then(canvas => {
-            // คืนค่าสไตล์กลับมาเหมือนเดิม
-            scheduleNode.style.borderRadius = "8px";
-            scheduleNode.style.boxShadow = "0 4px 6px rgba(0,0,0,0.05)";
-            
-            // สร้างลิงก์จำลองเพื่อกดดาวน์โหลด
             let link = document.createElement('a');
             link.download = 'My_Schedule.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
+            
+            // ปิด Loading และบอกว่าเสร็จแล้ว
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: 'โหลดตารางเรียนลงเครื่องเรียบร้อยแล้ว เอาไปตั้งวอลเปเปอร์ได้เลย!',
+                icon: 'success',
+                confirmButtonColor: '#1abc9c'
+            });
+        });
+    }
+
+    // 2. ฟังก์ชันยืนยันการลบวิชาเรียน (แบบเดียวกับหน้า Dashboard)
+    function confirmDeleteClass(event, deleteUrl) {
+        event.preventDefault(); 
+        Swal.fire({
+            title: 'แน่ใจหรือไม่?',
+            text: "หากลบวิชานี้แล้วจะไม่สามารถกู้คืนได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e74c3c',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '🗑️ ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก',
+            backdrop: `rgba(0,0,0,0.4)`,
+            borderRadius: '1rem'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = deleteUrl;
+            }
         });
     }
 </script>
 
+<script>
+    // 3. ฟังก์ชันคัดลอกข้อมูลและพาไปหน้าเพิ่มวิชา
+    function copyClassToForm(event, element) {
+        event.preventDefault();
+        
+        // ดึงชื่อวิชาและห้องเรียนจาก Data Attribute
+        const className = element.getAttribute('data-name');
+        const classRoom = element.getAttribute('data-room');
+        
+        // บันทึกข้อมูลลงใน Session ของเบราว์เซอร์
+        sessionStorage.setItem('prefill_class_name', className);
+        sessionStorage.setItem('prefill_class_room', classRoom);
+        
+        Swal.fire({
+            title: '📋 คัดลอกสำเร็จ!',
+            text: 'กำลังพาไปหน้าเพิ่มวิชา...',
+            icon: 'success',
+            timer: 1200,
+            showConfirmButton: false,
+            backdrop: `rgba(0,0,0,0.4)`
+        }).then(() => {
+            window.location.href = '/add_class'; // เด้งไปหน้าเพิ่มวิชา
+        });
+    }
+</script>
 {% endblock %}

@@ -89,8 +89,6 @@
 
                     {% if 'username' in session %}
                         <li class="nav-item"><a class="nav-link" href="/dashboard">งานของฉัน</a></li>
-                        
-                        <li class="nav-item"><a class="nav-link" href="/history">งานที่เสร็จแล้ว</a></li>
                         <li class="nav-item"><a class="nav-link" href="/schedule">ตารางเรียน</a></li>
                         <li class="nav-item"><a class="nav-link" href="/calendar">ปฏิทิน</a></li>
                         <li class="nav-item"><a class="nav-link" href="/profile">👤 โปรไฟล์</a></li>
@@ -165,6 +163,46 @@
         
         // สั่งให้อัปเดตเวลาทุกๆ 1 วินาที (1000 มิลลิวินาที)
         setInterval(updateClock, 1000);
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // เช็คว่าตอนนี้ผู้ใช้เข้ามาที่หน้า add_class หรือไม่
+            if (window.location.pathname === '/add_class') {
+                
+                const copyName = sessionStorage.getItem('prefill_class_name');
+                const copyRoom = sessionStorage.getItem('prefill_class_room');
+                
+                // ถ้ามีข้อมูลที่ก๊อปปี้ไว้
+                if (copyName) {
+                    // หาช่อง Input (ดักชื่อแอตทริบิวต์ name ที่เป็นไปได้ทั้งหมด)
+                    const nameInput = document.querySelector('input[name="name"]') || document.querySelector('input[name="title"]') || document.querySelector('input[name="subject"]');
+                    const roomInput = document.querySelector('input[name="room"]');
+                    
+                    // จับค่ายัดลงช่อง Input
+                    if (nameInput) nameInput.value = copyName;
+                    if (roomInput && copyRoom) roomInput.value = copyRoom;
+                    
+                    // เด้งแจ้งเตือนมุมขวาบนเบาๆ ว่าวางข้อมูลให้แล้ว
+                    if (typeof Swal !== 'undefined') {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'info',
+                            title: '✨ วางข้อมูลวิชาเดิมให้แล้ว! เลือกแค่วัน/เวลาก็พอ'
+                        });
+                    }
+                    
+                    // เคลียร์ความจำทิ้ง เพื่อให้การกด "+ เพิ่มวิชาใหม่" ครั้งหน้าเป็นช่องว่างปกติ
+                    sessionStorage.removeItem('prefill_class_name');
+                    sessionStorage.removeItem('prefill_class_room');
+                }
+            }
+        });
     </script>
 </body>
 </html>
