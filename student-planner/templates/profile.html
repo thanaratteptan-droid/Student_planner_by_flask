@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow border-primary">
+            <div class="card-body py-5">
+                <h1 class="display-1">👤</h1>
+                <h2 class="mt-3">ยินดีต้อนรับ, {{ username }}!</h2>
+                <p class="text-muted">นี่คือหน้าโปรไฟล์ส่วนตัวของคุณ</p>
+                <hr>
+                <div class="mt-4">
+                    <a href="/dashboard" class="btn btn-primary">ไปจัดการงานของฉัน</a>
+                    <a href="/logout" class="btn btn-danger">ออกจากระบบ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
