@@ -21,4 +21,26 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% if category == 'error' %}
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'เข้าสู่ระบบล้มเหลว!',
+                text: '{{ message }}',
+                confirmButtonColor: '#e74c3c',
+                confirmButtonText: 'ลองอีกครั้ง',
+                borderRadius: '1.25rem',
+                backdrop: `rgba(0,0,0,0.5)`
+            });
+        });
+      </script>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 {% endblock %}

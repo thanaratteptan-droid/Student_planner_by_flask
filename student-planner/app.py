@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import os
@@ -358,7 +358,9 @@ def login():
             session['username'] = user.username
             return redirect(url_for('dashboard'))
         else:
-            return "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! <a href='/login'>ลองใหม่</a>"
+            flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! กรุณาลองใหม่อีกครั้ง', 'error')
+            return redirect(url_for('login')) # สั่งให้เด้งกลับไปโหลดหน้า Login ใหม่
+
     return render_template('login.html')
 
 @app.route('/logout')
