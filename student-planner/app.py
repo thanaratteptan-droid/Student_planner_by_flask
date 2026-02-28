@@ -36,10 +36,14 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
 
-# Route หน้าแรก (Landing Page)
+# Route หน้าแรก (บังคับ Login) 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # ตรวจสอบว่ามีข้อมูลผู้ใช้ใน Session (ล็อกอินค้างไว้) หรือไม่
+    if 'username' in session:
+        return redirect(url_for('dashboard')) # ถ้าล็อกอินแล้ว ให้พาไปหน้างานของฉันเลย
+    else:
+        return redirect(url_for('login')) # ถ้ายังไม่ล็อกอิน ให้เด้งไปหน้าเข้าสู่ระบบ
 
 # --- เพิ่มโค้ดส่วนนี้ต่อจากหน้า home() ---
 
