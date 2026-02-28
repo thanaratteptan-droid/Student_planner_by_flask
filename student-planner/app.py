@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import os
 import random
 from datetime import datetime
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey1234'
@@ -151,6 +152,35 @@ def history():
 
     tasks = Task.query.filter_by(user_id=user.id, status='Done').all()
     return render_template('history.html', tasks=tasks)
+
+# --- ระบบผู้ช่วย AI แตกย่อยงาน (Simulated AI) ---
+@app.route('/ai_breakdown/<int:task_id>')
+def ai_breakdown(task_id):
+    user = get_current_user()
+    if not user: return {"error": "Unauthorized"}, 401
+
+    task = Task.query.filter_by(id=task_id, user_id=user.id).first_or_404()
+    
+    # หน่วงเวลา 1.5 วินาที ให้ดูเหมือน AI กำลังประมวลผลจริงๆ
+    time.sleep(1.5) 
+    
+    title = task.title.lower()
+    subtasks = []
+    
+    # วิเคราะห์คีย์เวิร์ดในชื่องาน เพื่อสร้างขั้นตอนที่เหมาะสม
+    if 'สอบ' in title or 'อ่าน' in title or 'หนังสือ' in title:
+        subtasks = ["📖 รวบรวมสไลด์และเนื้อหาทั้งหมดที่ต้องใช้", "📝 สรุปประเด็นสำคัญ (ทำ Short Note)", "🧠 ทบทวนและลองทำโจทย์เก่า/ข้อสอบเก่า"]
+    elif 'โปรเจกต์' in title or 'เว็บ' in title or 'ระบบ' in title or 'โค้ด' in title:
+        subtasks = ["🎨 ออกแบบหน้าตา (UI/UX) และวางโครงสร้าง Database", "💻 ลงมือเขียนโค้ด (Coding & Development)", "🐛 ทดสอบระบบและแก้ไขบั๊ก (Testing & Debugging)"]
+    elif 'รายงาน' in title or 'เปเปอร์' in title or 'วิจัย' in title:
+        subtasks = ["🔍 ค้นคว้าและรวบรวมข้อมูลอ้างอิง", "✍️ ร่างโครงสร้างรายงานและลงมือเขียนเนื้อหา", "✨ ตรวจทานความถูกต้องและจัดหน้ากระดาษ"]
+    elif 'พรีเซนต์' in title or 'นำเสนอ' in title or 'สไลด์' in title:
+        subtasks = ["📝 สรุปหัวข้อที่จะพูดให้กระชับเข้าใจง่าย", "🎨 ลงมือทำสไลด์นำเสนอให้น่าสนใจ", "🗣️ ซ้อมพูดจับเวลาหน้ากระจกหรือกับเพื่อน"]
+    else:
+        # กรณีงานทั่วไป
+        subtasks = ["🔍 ศึกษาข้อมูลเบื้องต้นเกี่ยวกับงานนี้", "✍️ ร่างโครงสร้างและแบ่งส่วนการทำงาน", "✅ ลงมือทำและตรวจสอบความเรียบร้อยก่อนส่ง"]
+
+    return {"task": task.title, "subtasks": subtasks}
 
 # --- ระบบปฏิทิน (Interactive Calendar) ---
 @app.route('/calendar')

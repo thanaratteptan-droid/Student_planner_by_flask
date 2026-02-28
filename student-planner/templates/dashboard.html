@@ -42,11 +42,11 @@
         font-size: 0.85rem;
         letter-spacing: 0.5px;
         border-bottom: 2px solid var(--bs-border-color) !important;
-        background-color: var(--bs-secondary-bg) !important; /* ปรับสีหัวตารางตามธีม */
+        background-color: var(--bs-secondary-bg) !important; 
     }
     .modern-table td {
         vertical-align: middle;
-        background-color: var(--bs-body-bg) !important; /* ปรับสีพื้นหลังแถวตามธีม */
+        background-color: var(--bs-body-bg) !important; 
         color: var(--bs-body-color) !important;
         border-bottom: 1px solid var(--bs-border-color);
     }
@@ -57,7 +57,7 @@
     }
 </style>
 
-<div class="card hover-card border-0 gradient-bg text-white mb-5 shadow-sm" style="border-radius: 1.25rem;">
+<div class="card hover-card border-0 gradient-bg text-white mb-4 shadow-sm" style="border-radius: 1.25rem;">
     <div class="card-body p-4 d-flex align-items-center">
         <div class="me-4 d-none d-md-block">
             <h1 style="font-size: 4rem; margin: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">🏆</h1>
@@ -76,6 +76,31 @@
                 <div class="progress-bar progress-bar-striped progress-bar-animated {% if percent == 100 %}bg-warning text-dark{% else %}bg-success{% endif %} fw-bold" 
                      role="progressbar" style="width: {{ percent }}%; font-size: 0.85rem;">
                     {{ percent }}%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 hover-card" style="border-radius: 1.25rem;">
+            <div class="card-body p-4 d-flex flex-column flex-md-row align-items-center justify-content-between">
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <h1 style="font-size: 3.5rem; margin: 0; margin-right: 15px;">🍅</h1>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-danger">Pomodoro Timer</h5>
+                        <p class="text-muted mb-0" style="font-size: 0.85rem;" id="pomodoro-status">พร้อมลุย! 25 นาทีแห่งความโฟกัส</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mx-4">
+                    <h1 class="display-4 fw-bold mb-0" id="pomodoro-time" style="font-variant-numeric: tabular-nums; color: var(--bs-body-color);">25:00</h1>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btn-pomodoro-start">▶️ เริ่มลุย!</button>
+                    <button class="btn btn-outline-secondary rounded-pill px-3" id="btn-pomodoro-reset">🔄 รีเซ็ต</button>
                 </div>
             </div>
         </div>
@@ -108,6 +133,14 @@
                                 {{ task.priority }}
                             </span>
                         </td>
+                        <td class="text-muted">{{ task.description }}</td>
+                        <td><span class="badge bg-danger rounded-pill">{{ task.due_date }}</span></td>
+                        <td class="text-end pe-4">
+                            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="askAI(event, {{ task.id }})" title="ให้ AI ช่วยแตกงาน">🤖</a>
+                            <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="เสร็จแล้ว">✅</a>
+                            <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="แก้ไข">✏️</a>
+                            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')" title="ลบ">🗑️</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -132,10 +165,20 @@
                 <tbody>
                     {% for task in pending_tasks %}
                     <tr>
-                        <td class="fw-bold text-body ps-4">{{ task.title }}</td>
+                        <td class="fw-bold text-body ps-4">
+                            {{ task.title }}
+                            <br>
+                            <span class="badge rounded-pill mt-1 
+                                {% if 'ด่วนมาก' in task.priority %}bg-danger
+                                {% elif 'ปานกลาง' in task.priority %}bg-warning text-dark
+                                {% else %}bg-info text-dark{% endif %}" style="font-size: 0.7rem; font-weight: 500;">
+                                {{ task.priority }}
+                            </span>
+                        </td>
                         <td class="text-muted">{{ task.description }}</td>
                         <td><span class="badge bg-secondary rounded-pill">{{ task.due_date }}</span></td>
                         <td class="text-end pe-4">
+                            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="askAI(event, {{ task.id }})" title="ให้ AI ช่วยแตกงาน">🤖</a>
                             <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="เสร็จแล้ว">✅</a>
                             <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="แก้ไข">✏️</a>
                             <a href="#" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')" title="ลบ">🗑️</a>                    
@@ -186,6 +229,9 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
+    // -----------------------------------------
+    // ฟังก์ชันลบงาน
+    // -----------------------------------------
     function confirmDelete(event, deleteUrl) {
         event.preventDefault(); 
         Swal.fire({
@@ -206,6 +252,9 @@
         });
     }
 
+    // -----------------------------------------
+    // ฟังก์ชันจุดพลุ
+    // -----------------------------------------
     {% if percent == 100 and total_tasks > 0 %}
         setTimeout(() => {
             var duration = 3 * 1000;
@@ -225,24 +274,129 @@
             Swal.fire({ title: '🎉 ยอดเยี่ยมมาก!', text: 'คุณเคลียร์งานทั้งหมดเรียบร้อยแล้ว !', icon: 'success', confirmButtonText: 'สุดยอดไปเลย', confirmButtonColor: '#1abc9c' });
         }, 500);
     {% endif %}
-</script>
 
-<script>
+    // -----------------------------------------
+    // ฟังก์ชัน Live Search
+    // -----------------------------------------
     document.getElementById('searchInput').addEventListener('keyup', function() {
         let filter = this.value.toLowerCase();
         let rows = document.querySelectorAll('table tbody tr');
         
         rows.forEach(row => {
-            // ข้ามแถวที่เขียนว่า "ไม่มีงานที่ค้างอยู่"
             if(row.innerText.includes('ไม่มีงาน') || row.innerText.includes('ยังไม่มีงาน')) return;
-            
             let text = row.innerText.toLowerCase();
             if(text.includes(filter)) {
-                row.style.display = ''; // โชว์แถวที่ตรงกับคำค้นหา
+                row.style.display = ''; 
             } else {
-                row.style.display = 'none'; // ซ่อนแถวที่ไม่ตรง
+                row.style.display = 'none'; 
             }
         });
+    });
+
+    // -----------------------------------------
+    // ฟังก์ชันผู้ช่วย AI
+    // -----------------------------------------
+    function askAI(event, taskId) {
+        event.preventDefault();
+        
+        Swal.fire({
+            title: '🤖 AI กำลังคิด...',
+            text: 'กำลังวิเคราะห์และแตกย่อยงานให้คุณ',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        fetch('/ai_breakdown/' + taskId)
+        .then(res => res.json())
+        .then(data => {
+            let htmlList = '<ul class="text-start mt-3 mb-0" style="list-style-type: none; padding-left: 0;">';
+            data.subtasks.forEach((st, i) => {
+                htmlList += `<li class="mb-2 p-3 bg-light rounded border-start border-4 border-primary text-dark shadow-sm"><b>ขั้นตอน ${i+1}:</b> ${st}</li>`;
+            });
+            htmlList += '</ul>';
+
+            Swal.fire({
+                title: '💡 AI แนะนำขั้นตอนการทำงาน',
+                html: `<p class="text-muted mb-2">สำหรับงาน: <b>${data.task}</b></p>` + htmlList,
+                icon: 'info',
+                confirmButtonText: 'รับทราบ ลุยเลย!',
+                confirmButtonColor: '#4e73df',
+                width: '600px'
+            });
+        });
+    }
+
+    // -----------------------------------------
+    // ฟังก์ชัน Pomodoro Timer
+    // -----------------------------------------
+    let pomodoroInterval;
+    let timeLeft = 25 * 60; 
+    let isRunning = false;
+    let isWorkSession = true; 
+
+    const timeDisplay = document.getElementById('pomodoro-time');
+    const statusDisplay = document.getElementById('pomodoro-status');
+    const startBtn = document.getElementById('btn-pomodoro-start');
+    const resetBtn = document.getElementById('btn-pomodoro-reset');
+
+    function updateTimeDisplay() {
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        timeDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (isRunning) {
+            clearInterval(pomodoroInterval);
+            startBtn.innerHTML = '▶️ ทำต่อ';
+            startBtn.classList.replace('btn-warning', 'btn-danger');
+            isRunning = false;
+        } else {
+            startBtn.innerHTML = '⏸️ พักแป๊บ';
+            startBtn.classList.replace('btn-danger', 'btn-warning');
+            isRunning = true;
+            
+            pomodoroInterval = setInterval(() => {
+                timeLeft--;
+                updateTimeDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(pomodoroInterval);
+                    isRunning = false;
+                    
+                    if (isWorkSession) {
+                        Swal.fire('🎉 หมดเวลาโฟกัส!', 'เก่งมาก! พักสายตา ดื่มน้ำสัก 5 นาทีนะ', 'success');
+                        timeLeft = 5 * 60;
+                        isWorkSession = false;
+                        statusDisplay.innerText = "โหมด: พักเบรก ☕";
+                        timeDisplay.classList.replace('text-danger', 'text-success');
+                        startBtn.classList.replace('btn-warning', 'btn-success');
+                    } else {
+                        Swal.fire('💪 หมดเวลาพัก!', 'ได้เวลาลุยงานต่อแล้ว ลุยเลย!', 'info');
+                        timeLeft = 25 * 60;
+                        isWorkSession = true;
+                        statusDisplay.innerText = "พร้อมลุย! 25 นาทีแห่งความโฟกัส 🍅";
+                        timeDisplay.classList.replace('text-success', 'text-danger');
+                        startBtn.classList.replace('btn-success', 'btn-danger');
+                    }
+                    startBtn.innerHTML = '▶️ เริ่มลุย!';
+                    updateTimeDisplay();
+                }
+            }, 1000);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        clearInterval(pomodoroInterval);
+        isRunning = false;
+        isWorkSession = true;
+        timeLeft = 25 * 60;
+        statusDisplay.innerText = "พร้อมลุย! 25 นาทีแห่งความโฟกัส 🍅";
+        timeDisplay.classList.replace('text-success', 'text-danger');
+        startBtn.classList.replace('btn-warning', 'btn-danger');
+        startBtn.classList.replace('btn-success', 'btn-danger');
+        startBtn.innerHTML = '▶️ เริ่มลุย!';
+        updateTimeDisplay();
     });
 </script>
 {% endblock %}
