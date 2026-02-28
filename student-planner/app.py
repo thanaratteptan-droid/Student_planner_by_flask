@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import os
 import random
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey1234'
@@ -59,11 +60,33 @@ def home():
 @app.route('/dashboard')
 def dashboard():
     user = get_current_user()
-    if not user: return redirect(url_for('login')) # ป้องกันคนไม่ล็อกอินแอบเข้า
+    if not user: return redirect(url_for('login'))
     
-    # ดึงเฉพาะงานของคนที่ล็อกอิน
-    tasks = Task.query.filter_by(user_id=user.id).all()
-    return render_template('dashboard.html', tasks=tasks)
+    # ดึงงานทั้งหมดของ User คนนี้มา
+    all_tasks = Task.query.filter_by(user_id=user.id).all()
+    
+    # ดึงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD (เพื่อเอาไปเทียบกับ due_date)
+    today = datetime.now().strftime('%Y-%m-%d') 
+    
+    # สร้าง List เปล่าๆ เพื่อคัดแยกประเภทงาน
+    pending_tasks = []
+    overdue_tasks = []
+    done_tasks = []
+    
+    for t in all_tasks:
+        if t.status == 'Done':
+            done_tasks.append(t) # งานที่เสร็จแล้ว
+        else:
+            # ถ้ายังไม่เสร็จ และมีกำหนดส่ง และกำหนดส่งน้อยกว่า(ผ่านไปแล้ว)วันที่ปัจจุบัน
+            if t.due_date and t.due_date < today:
+                overdue_tasks.append(t) # งานที่เกินกำหนด
+            else:
+                pending_tasks.append(t) # งานที่กำลังทำ (ยังไม่ถึงกำหนด)
+                
+    return render_template('dashboard.html', 
+                           pending_tasks=pending_tasks, 
+                           overdue_tasks=overdue_tasks, 
+                           done_tasks=done_tasks)
 
 @app.route('/add_task', methods=['GET', 'POST'])
 def add_task():
