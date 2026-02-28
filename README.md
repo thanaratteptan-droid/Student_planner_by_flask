@@ -58,5 +58,7 @@
    ```bash
    git clone https://github.com/thanaratteptan-droid/Student_planner_by_flask
    cd Student_planner_by_flask/student-planner
+   pip install -r requirements.txt
    python -m streamlit run app.py
+
 
