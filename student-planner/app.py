@@ -279,6 +279,33 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+# --- ระบบแก้ไขโปรไฟล์ ---
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    user = get_current_user()
+    if not user: return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        new_username = request.form['username']
+        new_password = request.form['password']
+
+        # เช็คว่าชื่อผู้ใช้ใหม่ไปซ้ำกับคนอื่นในระบบหรือไม่ (ยกเว้นตัวเอง)
+        existing_user = User.query.filter_by(username=new_username).first()
+        if existing_user and existing_user.id != user.id:
+            return "ชื่อผู้ใช้นี้มีคนใช้แล้ว! <a href='/edit_profile'>ลองใหม่</a>"
+
+        # อัปเดตข้อมูล
+        user.username = new_username
+        if new_password: # ถ้ามีการกรอกรหัสผ่านใหม่มาด้วย ก็ให้อัปเดต
+            user.password = new_password
+        
+        db.session.commit()
+        session['username'] = user.username # อัปเดต session ให้เป็นชื่อใหม่ด้วย
+        
+        return redirect(url_for('profile'))
+        
+    return render_template('edit_profile.html', user=user)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
