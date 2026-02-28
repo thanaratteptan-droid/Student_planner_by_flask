@@ -18,8 +18,8 @@
     }
     .timetable {
         display: grid;
-        grid-template-columns: 100px repeat(10, minmax(100px, 1fr));
-        /* 📌 จุดแก้ที่ 1: เปลี่ยนจาก 80px เป็น minmax(90px, auto) เพื่อให้กล่องยืดความสูงตามตัวหนังสือได้ */
+        /* 📌 เปลี่ยนตรงนี้: ซอยคอลัมน์เวลาเป็น 60 คอลัมน์เล็ก (10 ชั่วโมง x 6 ช่อง) */
+        grid-template-columns: 100px repeat(60, minmax(15px, 1fr));
         grid-template-rows: 50px repeat(5, minmax(90px, auto));
         gap: 1px;
         background-color: #eaecf0;
@@ -96,17 +96,17 @@
     <div class="timetable">
         <div class="time-header" style="grid-row: 1; grid-column: 1;">Day/Time</div>
         
-        <div class="time-header" style="grid-row: 1; grid-column: 2;">08:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 3;">09:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 4;">10:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 5;">11:00 AM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 6;">12:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 7;">01:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 8;">02:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 9;">03:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 10;">04:00 PM</div>
-        <div class="time-header" style="grid-row: 1; grid-column: 11;">05:00 PM</div>
-
+        <div class="time-header" style="grid-row: 1; grid-column: 2 / span 6;">08:00 AM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 8 / span 6;">09:00 AM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 14 / span 6;">10:00 AM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 20 / span 6;">11:00 AM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 26 / span 6;">12:00 PM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 32 / span 6;">01:00 PM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 38 / span 6;">02:00 PM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 44 / span 6;">03:00 PM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 50 / span 6;">04:00 PM</div>
+        <div class="time-header" style="grid-row: 1; grid-column: 56 / span 6;">05:00 PM</div>
+        
         <div class="day-label" style="grid-row: 2; grid-column: 1;">Monday</div>
         <div class="day-label" style="grid-row: 3; grid-column: 1;">Tuesday</div>
         <div class="day-label" style="grid-row: 4; grid-column: 1;">Wednesday</div>
