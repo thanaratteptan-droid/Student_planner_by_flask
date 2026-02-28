@@ -111,7 +111,7 @@ def schedule():
     subjects = Subject.query.all()
     
     schedule_data = []
-    subject_colors = {} # สร้าง Dictionary เพื่อจำว่าวิชาไหน ใช้สีอะไร
+    subject_colors = {}
     
     for sub in subjects:
         # 1. กำหนดแถว (Row)
@@ -121,22 +121,31 @@ def schedule():
         }
         row = days_map.get(sub.day, 2)
         
-        # 2. กำหนดคอลัมน์ (Column) ตามเวลา
+        # 2. กำหนดคอลัมน์ (Column) และแก้บั๊กความกว้างของเวลา
         try:
             start_t, end_t = sub.time.split('-')
             start_h = int(start_t.split(':')[0].strip())
-            end_h = int(end_t.split(':')[0].strip())
+            
+            # แยกชั่วโมงและนาทีของเวลาเลิกเรียน
+            end_parts = end_t.split(':')
+            end_h = int(end_parts[0].strip())
+            end_m = int(end_parts[1].strip())
+            
+            # ถ้ามีเศษนาที (เช่น 11:50) ให้ปัดขยายกล่องไปกินพื้นที่อีก 1 ช่อง
+            if end_m > 0:
+                end_h += 1
+                
             start_col = start_h - 8 + 2
             end_col = end_h - 8 + 2
-        except:
+        except Exception as e:
+            # ถ้าพิมพ์เวลาผิดรูปแบบ ให้กล่องกว้าง 2 ช่องเป็นค่าเริ่มต้น
             start_col = 2
             end_col = 4 
             
-        # 3. ลอจิกสุ่มสี (วิชาเดียวกันต้องได้สีเดียวกัน)
+        # 3. ลอจิกสุ่มสี
         if sub.name not in subject_colors:
-            # ถ้าวิชานี้ยังไม่มีสี ให้สุ่มสีพาสเทลใหม่ (ใช้ระบบสี HSL เพื่อให้สีอ่อนๆ สบายตา)
-            h = random.randint(0, 360) # สุ่มเฉดสี
-            subject_colors[sub.name] = f"hsl({h}, 80%, 85%)" # ล็อกความสดและความสว่างให้เป็นพาสเทล
+            h = random.randint(0, 360)
+            subject_colors[sub.name] = f"hsl({h}, 80%, 85%)"
             
         schedule_data.append({
             'id': sub.id,
@@ -146,7 +155,7 @@ def schedule():
             'row': row,
             'start_col': start_col,
             'end_col': end_col,
-            'bg_color': subject_colors[sub.name] # ดึงสีที่สุ่มไว้มาใช้
+            'bg_color': subject_colors[sub.name]
         })
         
     return render_template('schedule.html', schedule_data=schedule_data)
