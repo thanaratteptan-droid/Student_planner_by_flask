@@ -28,6 +28,7 @@ class Subject(db.Model):
     name = db.Column(db.String(100), nullable=False)
     day = db.Column(db.String(20))
     time = db.Column(db.String(50))
+    room = db.Column(db.String(50))
 
 # --- สร้างตารางเก็บข้อมูลผู้ใช้งาน (User) ---
 class User(db.Model):
@@ -152,6 +153,7 @@ def schedule():
             'name': sub.name,
             'day': sub.day,
             'time': sub.time,
+            'room': sub.room,
             'row': row,
             'start_col': start_col,
             'end_col': end_col,
@@ -182,7 +184,8 @@ def add_class():
         new_subject = Subject(
             name=request.form['name'],
             day=request.form['day'],
-            time=combined_time # บันทึกเวลาที่ต่อกันแล้วลงไป
+            time=combined_time,
+            room=request.form['room']
         )
         db.session.add(new_subject)
         db.session.commit()
