@@ -75,8 +75,14 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     
+                    <li class="nav-item me-4 d-none d-lg-block">
+                        <span id="realtimeClock" class="text-light opacity-75 fw-medium" style="font-size: 0.85rem; letter-spacing: 0.5px;">
+                            กำลังโหลดเวลา...
+                        </span>
+                    </li>
+
                     <li class="nav-item d-flex align-items-center me-3">
                         <button class="btn btn-sm btn-outline-light" id="darkModeToggle">🌙 Dark Mode</button>
                     </li>
@@ -128,6 +134,35 @@
                 themeToggleBtn.classList.replace('btn-outline-warning', 'btn-outline-light');
             }
         }
+    </script>
+
+<script>
+        function updateClock() {
+            const now = new Date();
+            
+            // ตั้งค่ารูปแบบการแสดงผล (ใช้ภาษาไทย)
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+            };
+            
+            // ดึงวันที่
+            const dateString = now.toLocaleDateString('th-TH', options);
+            
+            // ดึงเวลา (ชั่วโมง นาที วินาที)
+            const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // นำมารวมกันแล้วยัดใส่ใน Navbar
+            document.getElementById('realtimeClock').innerHTML = `📅 ${dateString} &nbsp; ⏰ ${timeString}`;
+        }
+
+        // สั่งให้ฟังก์ชันทำงานทันทีที่โหลดหน้าเว็บ
+        updateClock();
+        
+        // สั่งให้อัปเดตเวลาทุกๆ 1 วินาที (1000 มิลลิวินาที)
+        setInterval(updateClock, 1000);
     </script>
 </body>
 </html>
