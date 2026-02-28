@@ -168,13 +168,21 @@ def delete_class(id):
     db.session.commit()
     return redirect(url_for('schedule'))
 
+# --- ส่วนของหน้าเพิ่มวิชาเรียน ---
 @app.route('/add_class', methods=['GET', 'POST'])
 def add_class():
     if request.method == 'POST':
+        # รับค่าเวลาเริ่มและเวลาเลิกจากฟอร์ม HTML
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+        
+        # นำเวลามาต่อกันให้อยู่ในรูปแบบ "HH:MM - HH:MM" เพื่อให้ตารางเรียนอ่านค่าได้เหมือนเดิม
+        combined_time = f"{start_time} - {end_time}"
+        
         new_subject = Subject(
             name=request.form['name'],
             day=request.form['day'],
-            time=request.form['time']
+            time=combined_time # บันทึกเวลาที่ต่อกันแล้วลงไป
         )
         db.session.add(new_subject)
         db.session.commit()
