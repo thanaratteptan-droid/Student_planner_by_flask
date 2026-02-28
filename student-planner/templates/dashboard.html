@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>📌 งานของฉัน</h2>
+    <h2>งานของฉัน</h2>
     <a href="/add_task" class="btn btn-primary">+ เพิ่มงานใหม่</a>
 </div>
 
@@ -30,7 +30,11 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-outline-secondary">รอทำปุ่ม</button>
+                        {% if task.status != 'Done' %}
+                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success" title="ทำเสร็จแล้ว">✔️</a>
+                        {% endif %}
+                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning" title="แก้ไข">✏️</a>
+                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" title="ลบ" onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบงานนี้?');">🗑️</a>
                     </td>
                 </tr>
                 {% else %}
