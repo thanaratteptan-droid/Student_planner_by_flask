@@ -31,6 +31,7 @@ class Task(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
     due_date = db.Column(db.String(50))
+    priority = db.Column(db.String(20), default='⚡ ปานกลาง')
     status = db.Column(db.String(20), default='Pending')
     # ผูก Task กับ User
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -98,6 +99,7 @@ def add_task():
             title=request.form['title'], 
             description=request.form['description'], 
             due_date=request.form['due_date'],
+            priority=request.form.get('priority', '⚡ ปานกลาง'),
             user_id=user.id # บันทึกว่างานนี้เป็นของใคร
         )
         db.session.add(new_task)
@@ -116,6 +118,7 @@ def edit_task(id):
         task.title = request.form['title']
         task.description = request.form['description']
         task.due_date = request.form['due_date']
+        task.priority = request.form.get('priority', '⚡ ปานกลาง')
         task.status = request.form['status']
         db.session.commit()
         return redirect(url_for('dashboard'))

@@ -6,6 +6,11 @@
     <a href="/add_task" class="btn btn-primary shadow-sm rounded-pill px-4">+ เพิ่มงานใหม่</a>
 </div>
 
+<div class="input-group mb-4 shadow-sm" style="border-radius: 1rem; overflow: hidden;">
+    <span class="input-group-text bg-white border-0 px-4">🔍</span>
+    <input type="text" id="searchInput" class="form-control border-0 py-3 shadow-none" placeholder="ค้นหางานของคุณ...">
+</div>
+
 {% set total_tasks = pending_tasks|length + overdue_tasks|length + done_tasks|length %}
 {% set done_count = done_tasks|length %}
 {% if total_tasks > 0 %}
@@ -93,13 +98,15 @@
                 <tbody>
                     {% for task in overdue_tasks %}
                     <tr>
-                        <td class="text-danger fw-bold ps-4">{{ task.title }}</td>
-                        <td class="text-muted">{{ task.description }}</td>
-                        <td class="text-danger fw-bold"><span class="badge bg-danger rounded-pill">{{ task.due_date }}</span></td>
-                        <td class="text-end pe-4">
-                            <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="เสร็จแล้ว">✅</a>
-                            <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="แก้ไข">✏️</a>
-                            <a href="#" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="confirmDelete(event, '/delete_task/{{ task.id }}')" title="ลบ">🗑️</a>                        
+                        <td class="fw-bold text-body ps-4">
+                            {{ task.title }}
+                            <br>
+                            <span class="badge rounded-pill mt-1 
+                                {% if 'ด่วนมาก' in task.priority %}bg-danger
+                                {% elif 'ปานกลาง' in task.priority %}bg-warning text-dark
+                                {% else %}bg-info text-dark{% endif %}" style="font-size: 0.7rem; font-weight: 500;">
+                                {{ task.priority }}
+                            </span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -218,5 +225,24 @@
             Swal.fire({ title: '🎉 ยอดเยี่ยมมาก!', text: 'คุณเคลียร์งานทั้งหมดเรียบร้อยแล้ว !', icon: 'success', confirmButtonText: 'สุดยอดไปเลย', confirmButtonColor: '#1abc9c' });
         }, 500);
     {% endif %}
+</script>
+
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('table tbody tr');
+        
+        rows.forEach(row => {
+            // ข้ามแถวที่เขียนว่า "ไม่มีงานที่ค้างอยู่"
+            if(row.innerText.includes('ไม่มีงาน') || row.innerText.includes('ยังไม่มีงาน')) return;
+            
+            let text = row.innerText.toLowerCase();
+            if(text.includes(filter)) {
+                row.style.display = ''; // โชว์แถวที่ตรงกับคำค้นหา
+            } else {
+                row.style.display = 'none'; // ซ่อนแถวที่ไม่ตรง
+            }
+        });
+    });
 </script>
 {% endblock %}

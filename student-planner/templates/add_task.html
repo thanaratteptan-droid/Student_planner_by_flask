@@ -1,28 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm mt-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">เพิ่มงาน/การบ้านใหม่</h4>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0" style="border-radius: 1.25rem;">
+            <div class="card-header bg-primary text-white border-0 py-3 text-center" style="border-radius: 1.25rem 1.25rem 0 0;">
+                <h4 class="mb-0 fw-bold">📝 เพิ่มงานใหม่</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4 bg-body">
                 <form action="/add_task" method="POST">
+                    
                     <div class="mb-3">
-                        <label for="title" class="form-label">ชื่องาน <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+                        <label class="form-label fw-bold text-secondary">ชื่องาน (Title) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" placeholder="เช่น ส่งการบ้าน AI, อ่านหนังสือสอบ" required autofocus>
                     </div>
+
                     <div class="mb-3">
-                        <label for="description" class="form-label">รายละเอียด</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <label class="form-label fw-bold text-secondary">รายละเอียด (Description)</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="จดโน้ตเพิ่มเติมเกี่ยวกับงานนี้..."></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="due_date" class="form-label">กำหนดส่ง</label>
-                        <input type="date" class="form-control" id="due_date" name="due_date">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary">กำหนดส่ง (Due Date)</label>
+                            <input type="date" class="form-control" name="due_date" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-bold text-secondary">ระดับความสำคัญ</label>
+                            <select class="form-select" name="priority">
+                                <option value="🔥 ด่วนมาก">🔥 ด่วนมาก</option>
+                                <option value="⚡ ปานกลาง" selected>⚡ ปานกลาง</option>
+                                <option value="🍃 ชิลๆ">🍃 ชิลๆ</option>
+                            </select>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">บันทึกข้อมูล</button>
-                    <a href="/dashboard" class="btn btn-secondary w-100 mt-2">ยกเลิก</a>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 mb-2 shadow-sm">💾 บันทึกงาน</button>
+                    <a href="/dashboard" class="btn btn-light w-100 rounded-pill text-muted">ยกเลิก</a>
                 </form>
             </div>
         </div>
