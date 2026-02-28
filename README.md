@@ -54,12 +54,8 @@
 
 ## วิธีการติดตั้งและรันโปรเจกต์ (How to Run)
 
-1. **Clone Repository:**
    ```bash
    git clone https://github.com/thanaratteptan-droid/Student_planner_by_flask
    cd Student_planner_by_flask/student-planner
    pip install -r requirements.txt
    python app.py
-
-
-
