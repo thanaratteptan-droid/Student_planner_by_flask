@@ -1,4 +1,3 @@
-# เปลี่ยนบรรทัด import แรกให้เป็นแบบนี้
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -109,7 +108,54 @@ def history():
 @app.route('/schedule')
 def schedule():
     subjects = Subject.query.all()
-    return render_template('schedule.html', subjects=subjects)
+    
+    # เตรียมข้อมูลสำหรับวาดตาราง CSS Grid
+    schedule_data = []
+    colors = ['bg-blue', 'bg-orange', 'bg-purple', 'bg-green', 'bg-yellow']
+    
+    for i, sub in enumerate(subjects):
+        # 1. กำหนดแถว (Row) ตามวัน (จันทร์อยู่แถว 2 เพราะแถว 1 คือเวลา)
+        days_map = {
+            "วันจันทร์": 2, "วันอังคาร": 3, "วันพุธ": 4, 
+            "วันพฤหัสบดี": 5, "วันศุกร์": 6, "วันเสาร์": 7, "วันอาทิตย์": 8
+        }
+        row = days_map.get(sub.day, 2)
+        
+        # 2. กำหนดคอลัมน์ (Column) ตามเวลา (เช่น 09:00 - 12:00)
+        try:
+            start_t, end_t = sub.time.split('-')
+            # ดึงเฉพาะตัวเลขชั่วโมง
+            start_h = int(start_t.split(':')[0].strip())
+            end_h = int(end_t.split(':')[0].strip())
+            
+            # คอลัมน์ 1 คือชื่อวัน, 8 โมงเริ่มคอลัมน์ 2
+            start_col = start_h - 8 + 2
+            end_col = end_h - 8 + 2
+        except:
+            # ถ้าผู้ใช้พิมพ์เวลาผิดรูปแบบ ให้กินพื้นที่ 2 ช่องเป็นค่าเริ่มต้น
+            start_col = 2
+            end_col = 4 
+            
+        schedule_data.append({
+            'id': sub.id,
+            'name': sub.name,
+            'day': sub.day,
+            'time': sub.time,
+            'row': row,
+            'start_col': start_col,
+            'end_col': end_col,
+            'color': colors[i % len(colors)] # สลับสีไปเรื่อยๆ
+        })
+        
+    return render_template('schedule.html', schedule_data=schedule_data)
+
+# ลบวิชาเรียน
+@app.route('/delete_class/<int:id>')
+def delete_class(id):
+    subject = Subject.query.get_or_404(id)
+    db.session.delete(subject)
+    db.session.commit()
+    return redirect(url_for('schedule'))
 
 @app.route('/add_class', methods=['GET', 'POST'])
 def add_class():
