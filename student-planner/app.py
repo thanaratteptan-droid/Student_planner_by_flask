@@ -111,64 +111,95 @@ def history():
 def schedule():
     subjects = Subject.query.all()
     
+    # ลิสต์รายชื่อวัน
+    days_info = [
+        {"th": "วันจันทร์", "en": "Monday"},
+        {"th": "วันอังคาร", "en": "Tuesday"},
+        {"th": "วันพุธ", "en": "Wednesday"},
+        {"th": "วันพฤหัสบดี", "en": "Thursday"},
+        {"th": "วันศุกร์", "en": "Friday"}
+    ]
+    
     schedule_data = []
     subject_colors = {}
+    processed_subjects = []
     
+    # 1. คำนวณคอลัมน์เวลาและสุ่มสีให้วิชา
     for sub in subjects:
-        # 1. กำหนดแถว (Row)
-        days_map = {
-            "วันจันทร์": 2, "วันอังคาร": 3, "วันพุธ": 4, 
-            "วันพฤหัสบดี": 5, "วันศุกร์": 6, "วันเสาร์": 7, "วันอาทิตย์": 8
-        }
-        row = days_map.get(sub.day, 2)
-        
-        # 2. กำหนดคอลัมน์ (Column) และแก้บั๊กความกว้างของเวลา
-        # 2. กำหนดคอลัมน์ (Column) ตามเวลาจริงระดับนาที (สเกล 1 ช่อง = 10 นาที)
         try:
             start_t, end_t = sub.time.split('-')
+            start_h, start_m = map(int, start_t.split(':'))
+            end_h, end_m = map(int, end_t.split(':'))
             
-            # เวลาเริ่ม
-            start_parts = start_t.split(':')
-            start_h = int(start_parts[0].strip())
-            start_m = int(start_parts[1].strip())
-            
-            # เวลาเลิก
-            end_parts = end_t.split(':')
-            end_h = int(end_parts[0].strip())
-            end_m = int(end_parts[1].strip())
-            
-            # คำนวณ Grid Column (1 ชั่วโมงถูกแบ่งเป็น 6 ช่องเล็ก ช่องละ 10 นาที)
-            # เริ่มที่คอลัมน์ที่ 2 (08:00)
             start_col = 2 + ((start_h - 8) * 6) + (start_m // 10)
             end_col = 2 + ((end_h - 8) * 6) + (end_m // 10)
             
-            # ป้องกันตารางพังหากกรอกเวลาเกิน 08:00 - 18:00 (60 ช่อง + 2)
             if start_col < 2: start_col = 2
             if end_col > 62: end_col = 62
-            
         except Exception as e:
-            # ค่าเริ่มต้นถ้ากรอกผิด (กว้าง 2 ชั่วโมง = 12 ช่อง)
             start_col = 2
             end_col = 14 
             
-        # 3. ลอจิกสุ่มสี
         if sub.name not in subject_colors:
             h = random.randint(0, 360)
             subject_colors[sub.name] = f"hsl({h}, 80%, 85%)"
             
-        schedule_data.append({
-            'id': sub.id,
-            'name': sub.name,
-            'day': sub.day,
-            'time': sub.time,
-            'room': sub.room,
-            'row': row,
-            'start_col': start_col,
-            'end_col': end_col,
+        processed_subjects.append({
+            'id': sub.id, 'name': sub.name, 'day': sub.day,
+            'time': sub.time, 'room': sub.room,
+            'start_col': start_col, 'end_col': end_col,
             'bg_color': subject_colors[sub.name]
         })
         
-    return render_template('schedule.html', schedule_data=schedule_data)
+    # 2. ลอจิกแยกชั้น (Row) อัตโนมัติเมื่อวิชาเวลาทับซ้อนกัน
+    current_row = 2
+    day_labels = []
+    
+    for day_data in days_info:
+        day_th = day_data["th"]
+        # ดึงวิชาของวันนี้มาเรียงตามเวลาเริ่ม
+        day_subs = [s for s in processed_subjects if s['day'] == day_th]
+        day_subs.sort(key=lambda x: x['start_col'])
+        
+        tracks = [] # แถวย่อยภายใน 1 วัน
+        for sub in day_subs:
+            placed = False
+            for i, track in enumerate(tracks):
+                overlap = False
+                for existing_sub in track:
+                    # ถ้าเวลาคาบเกี่ยวกัน ถือว่าทับกัน!
+                    if sub['start_col'] < existing_sub['end_col'] and sub['end_col'] > existing_sub['start_col']:
+                        overlap = True
+                        break
+                if not overlap:
+                    sub['row'] = current_row + i
+                    track.append(sub)
+                    placed = True
+                    break
+            
+            if not placed:
+                # ถ้าทับหมดทุกชั้น ให้งอกชั้นใหม่ขึ้นมา
+                sub['row'] = current_row + len(tracks)
+                tracks.append([sub])
+                
+        # วันนี้ใช้ไปกี่แถว (อย่างน้อยต้องมี 1 แถว เพื่อวาดตารางเปล่าๆ)
+        rows_used = max(1, len(tracks))
+        
+        day_labels.append({
+            'name_en': day_data["en"],
+            'start_row': current_row,
+            'span': rows_used
+        })
+        
+        current_row += rows_used
+        schedule_data.extend(day_subs)
+        
+    total_rows = current_row - 2 # จำนวนแถวทั้งหมดที่ต้องให้ CSS Grid วาด
+
+    return render_template('schedule.html', 
+                           schedule_data=schedule_data, 
+                           day_labels=day_labels, 
+                           total_rows=total_rows)
 
 # ลบวิชาเรียน
 @app.route('/delete_class/<int:id>')
