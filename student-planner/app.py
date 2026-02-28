@@ -123,25 +123,33 @@ def schedule():
         row = days_map.get(sub.day, 2)
         
         # 2. กำหนดคอลัมน์ (Column) และแก้บั๊กความกว้างของเวลา
+        # 2. กำหนดคอลัมน์ (Column) ตามเวลาจริงระดับนาที (สเกล 1 ช่อง = 10 นาที)
         try:
             start_t, end_t = sub.time.split('-')
-            start_h = int(start_t.split(':')[0].strip())
             
-            # แยกชั่วโมงและนาทีของเวลาเลิกเรียน
+            # เวลาเริ่ม
+            start_parts = start_t.split(':')
+            start_h = int(start_parts[0].strip())
+            start_m = int(start_parts[1].strip())
+            
+            # เวลาเลิก
             end_parts = end_t.split(':')
             end_h = int(end_parts[0].strip())
             end_m = int(end_parts[1].strip())
             
-            # ถ้ามีเศษนาที (เช่น 11:50) ให้ปัดขยายกล่องไปกินพื้นที่อีก 1 ช่อง
-            if end_m > 0:
-                end_h += 1
-                
-            start_col = start_h - 8 + 2
-            end_col = end_h - 8 + 2
+            # คำนวณ Grid Column (1 ชั่วโมงถูกแบ่งเป็น 6 ช่องเล็ก ช่องละ 10 นาที)
+            # เริ่มที่คอลัมน์ที่ 2 (08:00)
+            start_col = 2 + ((start_h - 8) * 6) + (start_m // 10)
+            end_col = 2 + ((end_h - 8) * 6) + (end_m // 10)
+            
+            # ป้องกันตารางพังหากกรอกเวลาเกิน 08:00 - 18:00 (60 ช่อง + 2)
+            if start_col < 2: start_col = 2
+            if end_col > 62: end_col = 62
+            
         except Exception as e:
-            # ถ้าพิมพ์เวลาผิดรูปแบบ ให้กล่องกว้าง 2 ช่องเป็นค่าเริ่มต้น
+            # ค่าเริ่มต้นถ้ากรอกผิด (กว้าง 2 ชั่วโมง = 12 ช่อง)
             start_col = 2
-            end_col = 4 
+            end_col = 14 
             
         # 3. ลอจิกสุ่มสี
         if sub.name not in subject_colors:
