@@ -2,45 +2,105 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>งานของฉัน</h2>
+    <h2>📊 ภาพรวมงานทั้งหมดของฉัน</h2>
     <a href="/add_task" class="btn btn-primary">+ เพิ่มงานใหม่</a>
 </div>
 
-<div class="card shadow-sm">
+{% if overdue_tasks %}
+<div class="card shadow-sm border-danger mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">🚨 งานที่เกินกำหนดแล้ว! (รีบปั่นด่วน)</h5>
+    </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead class="table-dark">
+            <thead class="table-danger">
+                <tr>
+                    <th>ชื่องาน</th>
+                    <th>รายละเอียด</th>
+                    <th>กำหนดส่ง</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in overdue_tasks %}
+                <tr>
+                    <td class="text-danger fw-bold">{{ task.title }}</td>
+                    <td>{{ task.description }}</td>
+                    <td class="text-danger fw-bold">{{ task.due_date }}</td>
+                    <td>
+                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
+                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
+                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" onclick="return confirm('ลบงานนี้แน่ใจนะ?');">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-warning mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">⏳ งานที่กำลังทำ (Pending)</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-warning">
+                <tr>
+                    <th>ชื่องาน</th>
+                    <th>รายละเอียด</th>
+                    <th>กำหนดส่ง</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in pending_tasks %}
+                <tr>
+                    <td class="fw-bold">{{ task.title }}</td>
+                    <td>{{ task.description }}</td>
+                    <td>{{ task.due_date }}</td>
+                    <td>
+                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success">✅ เสร็จแล้ว</a>
+                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning">✏️ แก้ไข</a>
+                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" onclick="return confirm('ลบงานนี้แน่ใจนะ?');">🗑️ ลบ</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center py-4 text-muted">ไม่มีงานค้างเลย สบายจัง!</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow-sm border-success mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">✅ งานที่ทำเสร็จแล้ว (Done)</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-success">
                 <tr>
                     <th>ชื่องาน</th>
                     <th>รายละเอียด</th>
                     <th>กำหนดส่ง</th>
                     <th>สถานะ</th>
-                    <th>จัดการ</th>
                 </tr>
             </thead>
             <tbody>
-                {% for task in tasks %}
+                {% for task in done_tasks %}
                 <tr>
-                    <td>{{ task.title }}</td>
-                    <td>{{ task.description }}</td>
-                    <td>{{ task.due_date }}</td>
+                    <td class="text-decoration-line-through text-muted">{{ task.title }}</td>
+                    <td class="text-muted">{{ task.description }}</td>
+                    <td class="text-muted">{{ task.due_date }}</td>
                     <td>
-                        <span class="badge {% if task.status == 'Done' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                            {{ task.status }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if task.status != 'Done' %}
-                        <a href="/complete_task/{{ task.id }}" class="btn btn-sm btn-success" title="ทำเสร็จแล้ว">✔️</a>
-                        {% endif %}
-                        <a href="/edit_task/{{ task.id }}" class="btn btn-sm btn-warning" title="แก้ไข">✏️</a>
-                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-danger" title="ลบ" onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบงานนี้?');">🗑️</a>
+                        <span class="badge bg-success">เสร็จสิ้น</span>
+                        <a href="/delete_task/{{ task.id }}" class="btn btn-sm btn-outline-danger ms-2" onclick="return confirm('ลบประวัติงานนี้?');">ลบ</a>
                     </td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">ยังไม่มีงานเลย สบายจัง! กดเพิ่มงานใหม่ได้เลย</td>
-                </tr>
+                <tr><td colspan="4" class="text-center py-4 text-muted">ยังไม่มีงานที่ทำเสร็จเลย สู้ๆ!</td></tr>
                 {% endfor %}
             </tbody>
         </table>
