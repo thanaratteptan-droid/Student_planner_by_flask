@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
 import os
 import random
 
@@ -10,6 +11,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'planner.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# อัปโหลดรูปภาพ
+UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) # สร้างโฟลเดอร์อัตโนมัติถ้ายังไม่มี
+
 db = SQLAlchemy(app)
 
 # --- Database Models (อัปเดตเพิ่ม user_id เพื่อแยกโปรไฟล์) ---
@@ -17,6 +23,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
+    profile_pic = db.Column(db.String(200), nullable=True)
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -268,18 +275,12 @@ def login():
             return "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! <a href='/login'>ลองใหม่</a>"
     return render_template('login.html')
 
-@app.route('/profile')
-def profile():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('profile.html', username=session['username'])
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
-# --- ระบบแก้ไขโปรไฟล์ ---
+# --- ระบบแก้ไขโปรไฟล์ และอัปโหลดรูป ---
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     user = get_current_user()
@@ -289,22 +290,38 @@ def edit_profile():
         new_username = request.form['username']
         new_password = request.form['password']
 
-        # เช็คว่าชื่อผู้ใช้ใหม่ไปซ้ำกับคนอื่นในระบบหรือไม่ (ยกเว้นตัวเอง)
         existing_user = User.query.filter_by(username=new_username).first()
         if existing_user and existing_user.id != user.id:
             return "ชื่อผู้ใช้นี้มีคนใช้แล้ว! <a href='/edit_profile'>ลองใหม่</a>"
 
-        # อัปเดตข้อมูล
+        # จัดการอัปโหลดรูปโปรไฟล์
+        file = request.files.get('profile_pic')
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            # ตั้งชื่อไฟล์ใหม่โดยเอา username มานำหน้า เพื่อไม่ให้ชื่อไฟล์ซ้ำกัน
+            unique_filename = f"{user.username}_{filename}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(filepath)
+            user.profile_pic = unique_filename # บันทึกชื่อรูปลงฐานข้อมูล
+
         user.username = new_username
-        if new_password: # ถ้ามีการกรอกรหัสผ่านใหม่มาด้วย ก็ให้อัปเดต
+        if new_password: 
             user.password = new_password
         
         db.session.commit()
-        session['username'] = user.username # อัปเดต session ให้เป็นชื่อใหม่ด้วย
+        session['username'] = user.username 
         
         return redirect(url_for('profile'))
         
     return render_template('edit_profile.html', user=user)
+
+@app.route('/profile')
+def profile():
+    user = get_current_user() # ดึงข้อมูล user ปัจจุบันจากฐานข้อมูลทั้งก้อน
+    if not user:
+        return redirect(url_for('login'))
+        
+    return render_template('profile.html', user=user)
 
 if __name__ == '__main__':
     with app.app_context():
