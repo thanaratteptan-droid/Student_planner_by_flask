@@ -6,6 +6,55 @@
     <a href="/add_task" class="btn btn-primary">+ เพิ่มงานใหม่</a>
 </div>
 
+{% set total_tasks = pending_tasks|length + overdue_tasks|length + done_tasks|length %}
+{% set done_count = done_tasks|length %}
+{% if total_tasks > 0 %}
+    {% set percent = (done_count / total_tasks * 100)|round|int %}
+{% else %}
+    {% set percent = 0 %}
+{% endif %}
+
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(0,0,0,0.15) !important;
+    }
+    .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+
+<div class="card hover-card border-0 gradient-bg text-white mb-4 shadow" style="border-radius: 15px;">
+    <div class="card-body p-4 d-flex align-items-center">
+        <div class="me-4 d-none d-md-block">
+            <h1 style="font-size: 4rem; margin: 0; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));">🏆</h1>
+        </div>
+        <div class="flex-grow-1">
+            <h4 class="fw-bold mb-1">ภาพรวมความสำเร็จของคุณ</h4>
+            
+            {% if total_tasks == 0 %}
+                <p class="mb-3 text-light opacity-75">คุณยังไม่มีงานในระบบเลย มากดเพิ่มงานใหม่กันเถอะ!</p>
+            {% elif percent == 100 %}
+                <p class="mb-3 text-warning fw-bold">สุดยอด! คุณเคลียร์งานทุกอย่างเสร็จหมดแล้ว 🎉</p>
+            {% else %}
+                <p class="mb-3 text-light opacity-75">คุณทำภารกิจเสร็จไปแล้ว {{ done_count }} จาก {{ total_tasks }} งาน</p>
+            {% endif %}
+
+            <div class="progress shadow-sm" style="height: 22px; border-radius: 11px; background-color: rgba(255,255,255,0.2);">
+                <div class="progress-bar progress-bar-striped progress-bar-animated {% if percent == 100 %}bg-warning text-dark{% else %}bg-success{% endif %} fw-bold" 
+                     role="progressbar" 
+                     style="width: {{ percent }}%; font-size: 0.9rem;" 
+                     aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ percent }}%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if overdue_tasks %}
 <div class="card shadow-sm border-danger mb-4">
     <div class="card-header bg-danger text-white">
