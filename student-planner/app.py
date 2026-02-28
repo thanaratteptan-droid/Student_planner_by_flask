@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import os
+import random
 
 app = Flask(__name__)
 # เพิ่ม Secret Key ตรงนี้ (ใส่คำว่าอะไรก็ได้)
@@ -109,32 +110,33 @@ def history():
 def schedule():
     subjects = Subject.query.all()
     
-    # เตรียมข้อมูลสำหรับวาดตาราง CSS Grid
     schedule_data = []
-    colors = ['bg-blue', 'bg-orange', 'bg-purple', 'bg-green', 'bg-yellow']
+    subject_colors = {} # สร้าง Dictionary เพื่อจำว่าวิชาไหน ใช้สีอะไร
     
-    for i, sub in enumerate(subjects):
-        # 1. กำหนดแถว (Row) ตามวัน (จันทร์อยู่แถว 2 เพราะแถว 1 คือเวลา)
+    for sub in subjects:
+        # 1. กำหนดแถว (Row)
         days_map = {
             "วันจันทร์": 2, "วันอังคาร": 3, "วันพุธ": 4, 
             "วันพฤหัสบดี": 5, "วันศุกร์": 6, "วันเสาร์": 7, "วันอาทิตย์": 8
         }
         row = days_map.get(sub.day, 2)
         
-        # 2. กำหนดคอลัมน์ (Column) ตามเวลา (เช่น 09:00 - 12:00)
+        # 2. กำหนดคอลัมน์ (Column) ตามเวลา
         try:
             start_t, end_t = sub.time.split('-')
-            # ดึงเฉพาะตัวเลขชั่วโมง
             start_h = int(start_t.split(':')[0].strip())
             end_h = int(end_t.split(':')[0].strip())
-            
-            # คอลัมน์ 1 คือชื่อวัน, 8 โมงเริ่มคอลัมน์ 2
             start_col = start_h - 8 + 2
             end_col = end_h - 8 + 2
         except:
-            # ถ้าผู้ใช้พิมพ์เวลาผิดรูปแบบ ให้กินพื้นที่ 2 ช่องเป็นค่าเริ่มต้น
             start_col = 2
             end_col = 4 
+            
+        # 3. ลอจิกสุ่มสี (วิชาเดียวกันต้องได้สีเดียวกัน)
+        if sub.name not in subject_colors:
+            # ถ้าวิชานี้ยังไม่มีสี ให้สุ่มสีพาสเทลใหม่ (ใช้ระบบสี HSL เพื่อให้สีอ่อนๆ สบายตา)
+            h = random.randint(0, 360) # สุ่มเฉดสี
+            subject_colors[sub.name] = f"hsl({h}, 80%, 85%)" # ล็อกความสดและความสว่างให้เป็นพาสเทล
             
         schedule_data.append({
             'id': sub.id,
@@ -144,7 +146,7 @@ def schedule():
             'row': row,
             'start_col': start_col,
             'end_col': end_col,
-            'color': colors[i % len(colors)] # สลับสีไปเรื่อยๆ
+            'bg_color': subject_colors[sub.name] # ดึงสีที่สุ่มไว้มาใช้
         })
         
     return render_template('schedule.html', schedule_data=schedule_data)
