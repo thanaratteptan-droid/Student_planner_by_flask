@@ -326,77 +326,49 @@
         });
     }
 
-    // -----------------------------------------
-    // ฟังก์ชัน Pomodoro Timer
-    // -----------------------------------------
-    let pomodoroInterval;
-    let timeLeft = 25 * 60; 
-    let isRunning = false;
-    let isWorkSession = true; 
-
+    // ----------------------
+    //  ฟังก์ชัน Pomodoro Timer
+    // ----------------------
     const timeDisplay = document.getElementById('pomodoro-time');
     const statusDisplay = document.getElementById('pomodoro-status');
     const startBtn = document.getElementById('btn-pomodoro-start');
     const resetBtn = document.getElementById('btn-pomodoro-reset');
 
-    function updateTimeDisplay() {
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        timeDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
-
-    startBtn.addEventListener('click', () => {
-        if (isRunning) {
-            clearInterval(pomodoroInterval);
-            startBtn.innerHTML = '▶️ ทำต่อ';
-            startBtn.classList.replace('btn-warning', 'btn-danger');
-            isRunning = false;
-        } else {
+    // รอรับสัญญาณจาก base.html เพื่ออัปเดตหน้าจอตัวเลขใหญ่ๆ
+    document.addEventListener('pomoUpdated', (e) => {
+        timeDisplay.innerText = e.detail.timeString;
+        
+        if (window.pomoState.isRunning) {
             startBtn.innerHTML = '⏸️ พักแป๊บ';
             startBtn.classList.replace('btn-danger', 'btn-warning');
-            isRunning = true;
+            startBtn.classList.replace('btn-success', 'btn-warning');
             
-            pomodoroInterval = setInterval(() => {
-                timeLeft--;
-                updateTimeDisplay();
-
-                if (timeLeft <= 0) {
-                    clearInterval(pomodoroInterval);
-                    isRunning = false;
-                    
-                    if (isWorkSession) {
-                        Swal.fire('🎉 หมดเวลาโฟกัส!', 'เก่งมาก! พักสายตา ดื่มน้ำสัก 5 นาทีนะ', 'success');
-                        timeLeft = 5 * 60;
-                        isWorkSession = false;
-                        statusDisplay.innerText = "โหมด: พักเบรก ☕";
-                        timeDisplay.classList.replace('text-danger', 'text-success');
-                        startBtn.classList.replace('btn-warning', 'btn-success');
-                    } else {
-                        Swal.fire('💪 หมดเวลาพัก!', 'ได้เวลาลุยงานต่อแล้ว ลุยเลย!', 'info');
-                        timeLeft = 25 * 60;
-                        isWorkSession = true;
-                        statusDisplay.innerText = "พร้อมลุย! 25 นาทีแห่งความโฟกัส 🍅";
-                        timeDisplay.classList.replace('text-success', 'text-danger');
-                        startBtn.classList.replace('btn-success', 'btn-danger');
-                    }
-                    startBtn.innerHTML = '▶️ เริ่มลุย!';
-                    updateTimeDisplay();
-                }
-            }, 1000);
+            if (window.pomoState.isWork) {
+                statusDisplay.innerText = "กำลังลุยงาน! โฟกัสเข้าไว้ 🍅";
+                timeDisplay.classList.replace('text-success', 'text-danger');
+            } else {
+                statusDisplay.innerText = "โหมด: พักเบรก ☕";
+                timeDisplay.classList.replace('text-danger', 'text-success');
+            }
+        } else {
+            startBtn.innerHTML = window.pomoState.timeLeft === 25*60 ? '▶️ เริ่มลุย!' : '▶️ ทำต่อ';
+            startBtn.classList.replace('btn-warning', window.pomoState.isWork ? 'btn-danger' : 'btn-success');
+            
+            if (window.pomoState.isWork) {
+                statusDisplay.innerText = "พร้อมลุย! 25 นาทีแห่งความโฟกัส 🍅";
+                timeDisplay.classList.replace('text-success', 'text-danger');
+            } else {
+                statusDisplay.innerText = "พักผ่อนชิลๆ ☕";
+                timeDisplay.classList.replace('text-danger', 'text-success');
+            }
         }
     });
 
-    resetBtn.addEventListener('click', () => {
-        clearInterval(pomodoroInterval);
-        isRunning = false;
-        isWorkSession = true;
-        timeLeft = 25 * 60;
-        statusDisplay.innerText = "พร้อมลุย! 25 นาทีแห่งความโฟกัส 🍅";
-        timeDisplay.classList.replace('text-success', 'text-danger');
-        startBtn.classList.replace('btn-warning', 'btn-danger');
-        startBtn.classList.replace('btn-success', 'btn-danger');
-        startBtn.innerHTML = '▶️ เริ่มลุย!';
-        updateTimeDisplay();
-    });
+    // ทันทีที่โหลดหน้า Dashboard เสร็จ ให้ดึงค่าจาก base.html มาโชว์เลย
+    if(typeof window.updateGlobalPomo === 'function') window.updateGlobalPomo();
+
+    // เวลากดปุ่ม ให้ส่งคำสั่งไปจัดการที่ base.html
+    startBtn.addEventListener('click', () => { window.togglePomo(); });
+    resetBtn.addEventListener('click', () => { window.resetPomo(); });
 </script>
 {% endblock %}

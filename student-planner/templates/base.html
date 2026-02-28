@@ -204,5 +204,106 @@
             }
         });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // -----------------------------------------
+        // 🌟 ระบบ Global Pomodoro (ทำงานข้ามหน้าเว็บ)
+        // -----------------------------------------
+        
+        // 1. แอบสร้างป้ายเวลา Pomodoro เล็กๆ ไว้บน Navbar อัตโนมัติ
+        document.addEventListener("DOMContentLoaded", function() {
+            let nav = document.querySelector('.navbar-nav');
+            if (nav && !document.getElementById('navPomoBadge')) {
+                let li = document.createElement('li');
+                li.className = 'nav-item d-flex align-items-center me-3 mb-2 mb-lg-0';
+                li.innerHTML = '<span id="navPomoBadge" class="badge rounded-pill bg-danger d-none shadow-sm" style="font-size: 0.85rem; transition: all 0.3s;"></span>';
+                nav.insertBefore(li, nav.firstChild);
+            }
+        });
+
+        // 2. ดึงสถานะจาก localStorage (จำค่าข้ามหน้า)
+        window.pomoState = {
+            timeLeft: parseInt(localStorage.getItem('pomoTimeLeft')) || 25 * 60,
+            isRunning: localStorage.getItem('pomoIsRunning') === 'true',
+            isWork: localStorage.getItem('pomoIsWork') !== 'false',
+            endTime: parseInt(localStorage.getItem('pomoEndTime')) || 0
+        };
+
+        // 3. ฟังก์ชันคำนวณเวลาแบบอิงตามเวลาจริง (เวลาไม่เพี้ยนแม้ปิดแท็บ)
+        window.updateGlobalPomo = function() {
+            if (window.pomoState.isRunning) {
+                let now = Date.now();
+                window.pomoState.timeLeft = Math.round((window.pomoState.endTime - now) / 1000);
+
+                // ถ้าหมดเวลา
+                if (window.pomoState.timeLeft <= 0) {
+                    window.pomoState.isRunning = false;
+                    window.pomoState.isWork = !window.pomoState.isWork;
+                    window.pomoState.timeLeft = window.pomoState.isWork ? 25 * 60 : 5 * 60;
+                    
+                    localStorage.setItem('pomoIsRunning', 'false');
+                    localStorage.setItem('pomoIsWork', window.pomoState.isWork);
+                    localStorage.setItem('pomoTimeLeft', window.pomoState.timeLeft);
+
+                    // แจ้งเตือนเด้งได้ทุกหน้าเว็บ!
+                    if (window.pomoState.isWork) {
+                        Swal.fire('💪 หมดเวลาพัก!', 'ได้เวลาลุยงานต่อแล้ว ลุยเลย!', 'info');
+                    } else {
+                        Swal.fire('🎉 หมดเวลาโฟกัส!', 'เก่งมาก! พักสายตา ดื่มน้ำสัก 5 นาทีนะ', 'success');
+                    }
+                }
+            }
+            
+            // แปลงเวลาเป็นรูปแบบ นาที:วินาที (MM:SS)
+            let m = Math.floor(window.pomoState.timeLeft / 60).toString().padStart(2, '0');
+            let s = (window.pomoState.timeLeft % 60).toString().padStart(2, '0');
+            let timeString = `${m}:${s}`;
+
+            // อัปเดตป้ายบน Navbar (ถ้ามี)
+            let navBadge = document.getElementById('navPomoBadge');
+            if (navBadge) {
+                if (window.pomoState.isRunning) {
+                    navBadge.classList.remove('d-none');
+                    navBadge.innerText = window.pomoState.isWork ? `🍅 โฟกัส: ${timeString}` : `☕ พักเบรก: ${timeString}`;
+                    navBadge.className = window.pomoState.isWork ? 'badge rounded-pill bg-danger shadow-sm' : 'badge rounded-pill bg-success shadow-sm';
+                } else {
+                    navBadge.classList.add('d-none');
+                }
+            }
+
+            // ส่งสัญญาณไปอัปเดตหน้า Dashboard ด้วย (ถ้าเปิดหน้านั้นอยู่)
+            document.dispatchEvent(new CustomEvent('pomoUpdated', { detail: { timeString } }));
+        };
+
+        // สั่งให้ระบบเดินตลอดเวลา (ทุกๆ 1 วินาที)
+        setInterval(window.updateGlobalPomo, 1000);
+
+        // 4. ฟังก์ชันควบคุม (เอาไว้ให้ปุ่มใน Dashboard เรียกใช้)
+        window.togglePomo = function() {
+            window.pomoState.isRunning = !window.pomoState.isRunning;
+            localStorage.setItem('pomoIsRunning', window.pomoState.isRunning);
+            
+            if (window.pomoState.isRunning) {
+                // คำนวณเวลาเป้าหมายล่วงหน้า (กันเน็ตหลุด/ปิดหน้าจอ)
+                window.pomoState.endTime = Date.now() + window.pomoState.timeLeft * 1000;
+                localStorage.setItem('pomoEndTime', window.pomoState.endTime);
+            } else {
+                localStorage.setItem('pomoTimeLeft', window.pomoState.timeLeft);
+            }
+            window.updateGlobalPomo();
+        };
+
+        window.resetPomo = function() {
+            window.pomoState.isRunning = false;
+            window.pomoState.isWork = true;
+            window.pomoState.timeLeft = 25 * 60;
+            localStorage.setItem('pomoIsRunning', 'false');
+            localStorage.setItem('pomoIsWork', 'true');
+            localStorage.setItem('pomoTimeLeft', 25 * 60);
+            window.updateGlobalPomo();
+        };
+    </script>
 </body>
 </html>
