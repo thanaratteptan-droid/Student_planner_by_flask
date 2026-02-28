@@ -3,7 +3,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>📅 ตารางเรียนของฉัน</h2>
-    <a href="/add_class" class="btn btn-primary">+ เพิ่มวิชาเรียน</a>
+    <div>
+        <button class="btn btn-success me-2" onclick="downloadSchedule()">📸 เซฟเป็นรูป</button>
+        <a href="/add_class" class="btn btn-primary">+ เพิ่มวิชาเรียน</a>
+    </div>
 </div>
 
 <style>
@@ -125,7 +128,33 @@
             {% endif %}
         </div>
         {% endfor %}
-        
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    function downloadSchedule() {
+        // หาตัวกล่องตารางเรียนที่จะแคปเจอร์
+        const scheduleNode = document.querySelector(".timetable-wrapper");
+        
+        scheduleNode.style.borderRadius = "0px"; 
+        scheduleNode.style.boxShadow = "none";
+        
+        html2canvas(scheduleNode, {
+            scale: 2, // เพิ่มความคมชัดของรูปเป็น 2 เท่า
+            backgroundColor: document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#212529' : '#ffffff'
+        }).then(canvas => {
+            // คืนค่าสไตล์กลับมาเหมือนเดิม
+            scheduleNode.style.borderRadius = "8px";
+            scheduleNode.style.boxShadow = "0 4px 6px rgba(0,0,0,0.05)";
+            
+            // สร้างลิงก์จำลองเพื่อกดดาวน์โหลด
+            let link = document.createElement('a');
+            link.download = 'My_Schedule.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+</script>
+
 {% endblock %}
